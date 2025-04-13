@@ -7,41 +7,70 @@ namespace Tracker.Dotnet.Auth.Services
     public class LoginService
     {
         // There is UserManager to create and manage users, just for notes.
-        private readonly ISignInManagerWrapper _signInWrapper;
-        private readonly IUserManagerWrapper _userWrapper;
+        private IUserService _userService;
+        private readonly ITokenGeneratorService _tokenGeneratorService;
+        private readonly IRefreshTokenDbService _refreshTokenDbService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<LoginService> _logger;
 
-        public LoginService(ISignInManagerWrapper signInWrapper, IUserManagerWrapper userWrapper, ILogger<LoginService> logger)
+        public LoginService(
+            IUserService userService, 
+            ITokenGeneratorService tokenGeneratorService,
+            IRefreshTokenDbService refreshTokenDbService,
+            IUnitOfWork unitOfWork,
+            ILogger<LoginService> logger)
         {
-            _signInWrapper = signInWrapper;
-            _userWrapper = userWrapper;
+            _userService = userService;
+            _tokenGeneratorService = tokenGeneratorService;
+            _refreshTokenDbService = refreshTokenDbService;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
-        public async Task<Result<LoginResponse>> Login(string login, string password)
+        public async Task<Result<LoginResponse>> LoginAsync(string login, string password, CancellationToken cancellationToken)
         {
-            var result = await _signInWrapper.PasswordSignInAsync(login, password);
-            if (result)
+            var user = await _userService.PasswordSignInAsync(login, password, cancellationToken);
+            if (user != null)
             {
-                return new Result<LoginResponse>(new LoginResponse("access", "refresh"));
+                var role = await _userService.GetUserRoleAsync(user, cancellationToken);
+                var accessToken = _tokenGeneratorService.GenerateAceessToken(user!, role);
+                var refreshToken = _tokenGeneratorService.GenerateRefreshToken();
+                var refreshTokenHash = _tokenGeneratorService.GenerateRefreshTokenHash(refreshToken);
+
+                // In our case user can have only 1 active session, so if they logs in again, other sessions become inactive
+                var oldTokens = await _refreshTokenDbService.GetActiveRefreshTokensByUserAsync(user!.Id, cancellationToken);
+                foreach (var oldToken in oldTokens)
+                {
+                    oldToken.Status = RefreshTokenStatus.Revoked;
+                }
+
+                var refreshTokenDb = new RefreshToken
+                {
+                    UserId = user.Id,
+                    User = user,
+                    TokenHash = refreshTokenHash, // storing hashes for security
+                    Status = RefreshTokenStatus.Active,
+                };
+
+                _refreshTokenDbService.AddRefreshToken(refreshTokenDb);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                return new Result<LoginResponse>(new LoginResponse(accessToken, refreshToken));
             }
 
             return new Result<LoginResponse>(401, "Incorrect login or password");
         }
 
-        public async Task<Result<int>> Create(User user)
+        public async Task<Result<User>> Create(User user, string password, string role)
         {
-            var result = await _userWrapper.CreateUserAsync(user, "123");
+            var result = await _userService.CreateUserAsync(user, password, role);
             
-            if (!result.Succeeded)
+            if (!result.Success)
             {
-                var errors = string.Join("; ", result.Errors.Select(x => $"Code: {x.Code}, description: {x.Description}").ToArray());
-                _logger.LogError("Could not create user, errors: {errors}", errors);
-
-                return new Result<int>(400, "Could not create user, see logs for more details");
+                return new Result<User>(400, result.Message!);
             }
 
-            return new Result<int>(Convert.ToInt32(user.Id));
+            return new Result<User>(user);
         }
     }
 }

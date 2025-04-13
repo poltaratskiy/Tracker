@@ -21,9 +21,9 @@ namespace Tracker.Dotnet.Auth.Controllers
         [HttpPost]
         [Route("login")]
         [ProducesDefaultResponseType(typeof(Result<LoginResponse>))]
-        public async Task<IActionResult> Login(string login, string password)
+        public async Task<IActionResult> Login(string login, string password, CancellationToken cancellationToken)
         {
-            var result = await _loginService.Login(login, password);
+            var result = await _loginService.LoginAsync(login, password, cancellationToken);
 
             if (result.Success)
             {
