@@ -10,10 +10,10 @@ namespace Tracker.Dotnet.Auth.Controllers
     [AllowAnonymous]
     public class HomeController : ControllerBase
     {
-        private readonly LoginService _loginService;
+        private readonly AuthService _loginService;
 
         public HomeController
-            (LoginService loginService)
+            (AuthService loginService)
         {
             _loginService = loginService;
         }
@@ -33,6 +33,32 @@ namespace Tracker.Dotnet.Auth.Controllers
             {
                 return Unauthorized(result);
             }
+        }
+
+        [HttpPost]
+        [Route("refresh")]
+        [ProducesDefaultResponseType(typeof(Result<LoginResponse>))]
+        public async Task<IActionResult> Refresh(string refreshToken, CancellationToken cancellationToken)
+        {
+            // This method is also anonymous because access token may be expired
+            var result = await _loginService.RefreshTokenAsync(refreshToken, cancellationToken);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return Unauthorized(result);
+            }
+        }
+
+        [HttpPost]
+        [Route("logout")]
+        public async Task<IActionResult> Logout(string refreshToken, CancellationToken cancellationToken)
+        {
+            await _loginService.LogoutAsync(refreshToken, cancellationToken);
+            return Ok();
         }
     }
 }

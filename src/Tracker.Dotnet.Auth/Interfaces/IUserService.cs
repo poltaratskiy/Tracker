@@ -17,5 +17,7 @@ namespace Tracker.Dotnet.Auth.Interfaces
         public Task<string> GetUserRoleAsync(User user, CancellationToken cancellationToken);
 
         public Task<Result<User>> CreateUserAsync(User user, string password, string role);
+
+        public Task<User?> FindUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     }
 }

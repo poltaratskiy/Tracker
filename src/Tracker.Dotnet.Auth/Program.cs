@@ -6,8 +6,10 @@ using Serilog.Exceptions;
 using Serilog.Settings.Configuration;
 using System.Reflection;
 using Tracker.Dotnet.Auth.Configuration;
+using Tracker.Dotnet.Auth.Interfaces;
 using Tracker.Dotnet.Auth.Models.Entities;
 using Tracker.Dotnet.Auth.Persistence;
+using Tracker.Dotnet.Auth.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +35,19 @@ try
 
 
     builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+
+    builder.Services
+        .AddScoped<ISignInManagerWrapper, SignInManagerWrapper>()
+        .AddScoped<IRoleManagerWrapper, RoleManagerWrapper>()
+        .AddScoped<IUserManagerWrapper, UserManagerWrapper>();
+
+    builder.Services.AddSingleton<ITokenGeneratorService, TokenGeneratorService>();
+
+    builder.Services
+        .AddScoped<IRefreshTokenDbService, RefreshTokenDbService>()
+        .AddScoped<IUnitOfWork, UnitOfWork>()
+        .AddScoped<IUserService, UserService>()
+        .AddScoped<AuthService>();
 
     services.AddControllers();
     services.AddEndpointsApiExplorer();
