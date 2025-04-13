@@ -5,6 +5,7 @@ using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Settings.Configuration;
 using System.Reflection;
+using Tracker.Dotnet.Auth.Configuration;
 using Tracker.Dotnet.Auth.Models.Entities;
 using Tracker.Dotnet.Auth.Persistence;
 
@@ -29,6 +30,9 @@ try
     builder.Services.AddIdentity<User, IdentityRole>()
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
+
+
+    builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
 
     services.AddControllers();
     services.AddEndpointsApiExplorer();
