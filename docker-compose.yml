@@ -1,9 +1,13 @@
 ﻿services:
   tracker.dotnet.auth:
     image: ${DOCKER_REGISTRY-}trackerdotnetauth
+    ports:
+      - "53852:8000"
     build:
       context: .
       dockerfile: src/Tracker.Dotnet.Auth/Dockerfile
+    volumes:
+      - ./logging:/var/log/myservices
 
   database:
     image: postgres:17.4-alpine3.21
@@ -21,7 +25,7 @@
       retries: 5
   
   loki:
-    image: grafana/loki:grafana/loki:3.4-arm64
+    image: grafana/loki:3.4.3
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -29,7 +33,8 @@
   promtail:
     image: grafana/promtail:3.4.3-amd64
     volumes:
-      - /var/log:/var/log
+      - ./logging:/var/log/myservices
+      - ./promtail:/etc/promtail
     command: -config.file=/etc/promtail/config.yml
 
   grafana:

@@ -11,11 +11,14 @@ namespace Tracker.Dotnet.Auth.Controllers
     public class HomeController : ControllerBase
     {
         private readonly AuthService _loginService;
+        private readonly ILogger<HomeController> _logger;
 
         public HomeController
-            (AuthService loginService)
+            (AuthService loginService,
+            ILogger<HomeController> logger)
         {
             _loginService = loginService;
+            _logger = logger;
         }
         
         [HttpPost]
@@ -59,6 +62,14 @@ namespace Tracker.Dotnet.Auth.Controllers
         {
             await _loginService.LogoutAsync(refreshToken, cancellationToken);
             return Ok();
+        }
+
+        [HttpGet]
+        [Route("test")]
+        public async Task<IActionResult> Test()
+        {
+            _logger.LogInformation("Test: {parameter}", "parameter value");
+            return Ok("Test");
         }
     }
 }
