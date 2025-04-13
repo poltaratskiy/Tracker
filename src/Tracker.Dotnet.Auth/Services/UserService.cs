@@ -1,4 +1,5 @@
-﻿using Tracker.Dotnet.Auth.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using Tracker.Dotnet.Auth.Interfaces;
 using Tracker.Dotnet.Auth.Models;
 using Tracker.Dotnet.Auth.Models.Entities;
 using Tracker.Dotnet.Auth.Persistence;
@@ -10,13 +11,20 @@ namespace Tracker.Dotnet.Auth.Services
         private readonly ISignInManagerWrapper _signInManager;
         private readonly IUserManagerWrapper _userManager;
         private readonly IRoleManagerWrapper _roleManager;
+        private readonly ITokenGeneratorService _tokenGeneratorService;
         private readonly ApplicationDbContext _context;
-
-        public UserService(ISignInManagerWrapper signInManager, IUserManagerWrapper userManager, IRoleManagerWrapper roleManager, ApplicationDbContext context)
+        
+        public UserService(
+            ISignInManagerWrapper signInManager, 
+            IUserManagerWrapper userManager, 
+            IRoleManagerWrapper roleManager, 
+            ITokenGeneratorService tokenGeneratorService,
+            ApplicationDbContext context)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
+            _tokenGeneratorService = tokenGeneratorService;
             _context = context;
         }
 
@@ -66,6 +74,13 @@ namespace Tracker.Dotnet.Auth.Services
 
             transaction.Commit();
             return new Result<User>(user); // TODO: Проверить, присваивается ли ID пользователя
+        }
+
+        public async Task<User?> FindUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+        {
+            var hash = _tokenGeneratorService.GenerateRefreshTokenHash(refreshToken);
+            var refreshTokenDb = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.TokenHash.Equals(hash), cancellationToken);
+            return refreshTokenDb?.User;
         }
     }
 }
