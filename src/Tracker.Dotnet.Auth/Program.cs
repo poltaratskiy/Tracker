@@ -16,9 +16,48 @@ var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 var configuration = builder.Configuration;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+Serilog.Debugging.SelfLog.Enable(Console.Error);
+
+var appName = Assembly.GetCallingAssembly().GetName().Name;
+var env = builder.Environment;
+var appEnvironment = env.IsDevelopment() ? "Development" : "Production";
+
+var loggerConfiguration = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft", env.IsDevelopment() ? LogEventLevel.Information : LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", appName)
+    .Enrich.WithProperty("ApplicationEnvironment", appEnvironment)
+    .Enrich.WithExceptionDetails()
+    .ReadFrom.Configuration(configuration, new ConfigurationReaderOptions
+    {
+        SectionName = "Logging",
+    });
+
+//elastic or something similar
+loggerConfiguration.WriteTo.File(
+    "/var/log/myservices/auth-service.log",
+    rollingInterval: RollingInterval.Day,
+    retainedFileCountLimit: 7);
+
+if (env.IsDevelopment())
+{
+    loggerConfiguration.WriteTo.Console(
+        restrictedToMinimumLevel: LogEventLevel.Debug,
+        outputTemplate: "{Timestamp:O} [{Level:u3}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}");
+}
+else
+{
+    loggerConfiguration.WriteTo.Console(
+        formatter: new Serilog.Formatting.Compact.RenderedCompactJsonFormatter(),
+        restrictedToMinimumLevel: LogEventLevel.Information);
+}
+
+Log.Logger = loggerConfiguration
     .CreateLogger();
+
+builder.Host.UseSerilog();
 
 try
 {
@@ -53,40 +92,10 @@ try
     services.AddEndpointsApiExplorer();
     services.AddSwaggerGen();
 
-    services.AddSerilog(loggerConfiguration =>
+    /*services.AddSerilog(loggerConfiguration =>
     {
-        var appName = Assembly.GetCallingAssembly().GetName().Name;
-        var env = builder.Environment;
-        var appEnvironment = env.IsDevelopment() ? "Development" : "Production";
-
-        loggerConfiguration
-            .MinimumLevel.Debug()
-            .MinimumLevel.Override("System", LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft", env.IsDevelopment() ? LogEventLevel.Information : LogEventLevel.Warning)
-            .Enrich.FromLogContext()
-            .Enrich.WithProperty("Application", appName)
-            .Enrich.WithProperty("ApplicationEnvironment", appEnvironment)
-            .Enrich.WithExceptionDetails()
-            .ReadFrom.Configuration(configuration, new ConfigurationReaderOptions
-            {
-                SectionName = "Logging",
-            });
-
-        //elastic or something similar
-
-        if (env.IsDevelopment())
-        {
-            loggerConfiguration.WriteTo.Console(
-                restrictedToMinimumLevel: LogEventLevel.Debug,
-                outputTemplate: "{Timestamp:O} [{Level:u3}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}");
-        }
-        else
-        {
-            loggerConfiguration.WriteTo.Console(
-                formatter: new Serilog.Formatting.Compact.RenderedCompactJsonFormatter(),
-                restrictedToMinimumLevel: LogEventLevel.Information);
-        }
-    });
+        
+    });*/
 
     var app = builder.Build();
     Log.Information($"Configuring services at {assemblyName} has been finished");
