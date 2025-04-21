@@ -2,10 +2,13 @@
   tracker.dotnet.auth:
     image: ${DOCKER_REGISTRY-}trackerdotnetauth
     ports:
-      - "53852:8000"
+      - "8080:8080"
     build:
       context: .
       dockerfile: src/Tracker.Dotnet.Auth/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
     volumes:
       - ./logging:/var/log/myservices
 
