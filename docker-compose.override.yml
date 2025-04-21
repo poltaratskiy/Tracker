@@ -1,9 +1,1 @@
-services:
-  tracker.dotnet.auth:
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-    ports:
-      - "8080"
-
-
+﻿

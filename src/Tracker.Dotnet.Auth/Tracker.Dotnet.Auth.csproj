@@ -21,4 +21,8 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Tracker.Dotnet.Libs\Tracker.Dotnet.Libs.csproj" />
+  </ItemGroup>
+
 </Project>

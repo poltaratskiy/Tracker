@@ -10,6 +10,7 @@ using Tracker.Dotnet.Auth.Interfaces;
 using Tracker.Dotnet.Auth.Models.Entities;
 using Tracker.Dotnet.Auth.Persistence;
 using Tracker.Dotnet.Auth.Services;
+using Tracker.Dotnet.Libs.RefId;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,40 +25,23 @@ var appEnvironment = env.IsDevelopment() ? "Development" : "Production";
 
 var loggerConfiguration = new LoggerConfiguration()
     .MinimumLevel.Debug()
-    .MinimumLevel.Override("System", LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft", env.IsDevelopment() ? LogEventLevel.Information : LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Application", appName)
     .Enrich.WithProperty("ApplicationEnvironment", appEnvironment)
     .Enrich.WithExceptionDetails()
-    .ReadFrom.Configuration(configuration, new ConfigurationReaderOptions
-    {
-        SectionName = "Logging",
-    });
-
-//elastic or something similar
-loggerConfiguration.WriteTo.File(
+    .WriteTo.Console(
+        restrictedToMinimumLevel: LogEventLevel.Debug,
+        outputTemplate: "{Timestamp:O} [{Level:u3}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
     "/var/log/myservices/auth-service.log",
     rollingInterval: RollingInterval.Day,
     retainedFileCountLimit: 7);
 
-if (env.IsDevelopment())
-{
-    loggerConfiguration.WriteTo.Console(
-        restrictedToMinimumLevel: LogEventLevel.Debug,
-        outputTemplate: "{Timestamp:O} [{Level:u3}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}");
-}
-else
-{
-    loggerConfiguration.WriteTo.Console(
-        formatter: new Serilog.Formatting.Compact.RenderedCompactJsonFormatter(),
-        restrictedToMinimumLevel: LogEventLevel.Information);
-}
-
+// Creates global logger fon logging DI initialization
 Log.Logger = loggerConfiguration
     .CreateLogger();
 
-builder.Host.UseSerilog();
+
 
 try
 {
@@ -65,6 +49,8 @@ try
     Log.Information($"Starting {assemblyName} application...");
 
     // Add services to the container.
+    builder.Services.AddHttpContextAccessor();
+
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(configuration.GetConnectionString("ApplicationDbContext")));
 
@@ -92,10 +78,46 @@ try
     services.AddEndpointsApiExplorer();
     services.AddSwaggerGen();
 
-    /*services.AddSerilog(loggerConfiguration =>
+    builder.Host.UseSerilog((context, services, config) =>
     {
-        
-    });*/
+        var appName = Assembly.GetCallingAssembly().GetName().Name;
+        var env = context.HostingEnvironment;
+        var appEnvironment = env.IsDevelopment() ? "Development" : "Production";
+
+        config
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Routing.EndpointMiddleware", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("Application", appName)
+            .Enrich.WithProperty("ApplicationEnvironment", appEnvironment)
+            .Enrich.WithExceptionDetails()
+            .WithRefId(services)
+            .ReadFrom.Configuration(configuration, new ConfigurationReaderOptions
+            {
+                SectionName = "Logging",
+            });
+
+        //elastic or something similar
+        config.WriteTo.File(
+            "/var/log/myservices/auth-service.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 7);
+
+        if (env.IsDevelopment())
+        {
+            config.WriteTo.Console(
+                restrictedToMinimumLevel: LogEventLevel.Debug,
+                outputTemplate: "{Timestamp:O} [{Level:u3}] [{RefId}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}");
+        }
+        else
+        {
+            config.WriteTo.Console(
+                //formatter: new Serilog.Formatting.Compact.RenderedCompactJsonFormatter(),
+                restrictedToMinimumLevel: LogEventLevel.Information);
+        }
+    });
 
     var app = builder.Build();
     Log.Information($"Configuring services at {assemblyName} has been finished");
@@ -121,6 +143,8 @@ try
             throw;
         }
     }
+
+    app.UseRefId();
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsProduction())
