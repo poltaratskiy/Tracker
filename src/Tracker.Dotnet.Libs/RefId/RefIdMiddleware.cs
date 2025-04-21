@@ -9,12 +9,10 @@ namespace Tracker.Dotnet.Libs.RefId
     public class RefIdMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<RefIdMiddleware> _logger;
 
-        public RefIdMiddleware(RequestDelegate next, ILogger<RefIdMiddleware> logger)
+        public RefIdMiddleware(RequestDelegate next)
         {
             _next = next;
-            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
