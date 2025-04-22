@@ -46,7 +46,7 @@ jobs:
       - name: Generate coverage reports
         run: |
           minicover report --coverage-file coverage.json --no-fail 
-          minicover report --report-type cobertura --coverage-file coverage.cobertura.xml --no-fail 
+          minicover opencoverreport --output coverage.opencover.xml --no-fail 
 
       - name: Uninstrument
         run: minicover uninstrument
@@ -55,12 +55,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
-          path: '**/coverage.cobertura.xml'
+          path: coverage.opencover.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: '**/coverage.cobertura.xml'
+          files: coverage.opencover.xml
           fail_ci_if_error: true
           verbose: true
         # token is not needed for public repositories
