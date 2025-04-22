@@ -19,9 +19,6 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: List files
-        run: ls -R
-
       - name: Restore dependencies
         run: dotnet restore Tracker.sln
 
@@ -33,7 +30,7 @@ jobs:
           dotnet test Tracker.sln --no-build --configuration Release \
             /p:CollectCoverage=true \
             /p:CoverletOutputFormat=cobertura \
-            /p:CoverletOutput=./TestResults/coverage.xml
+            /p:CoverletOutput=./TestResults/coverage.xml \
             /p:ExcludeByFile="**/Migrations/*.cs;**/Program.cs;**/Startup.cs;**/Interfaces/*.cs;**/Models/*.cs"
 
       - name: Upload coverage to Codecov
