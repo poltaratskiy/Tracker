@@ -43,13 +43,13 @@ jobs:
       - name: Test with coverage
         run: dotnet test Tracker.sln --no-build --configuration Release
 
-      - name: Uninstrument
-        run: minicover uninstrument
-
       - name: Generate coverage reports
         run: |
           minicover report --coverage-file coverage.json
           minicover report --report-type cobertura --coverage-file coverage.cobertura.xml
+
+      - name: Uninstrument
+        run: minicover uninstrument
 
       - name: Upload coverage report as artifact
         uses: actions/upload-artifact@v4
