@@ -4,6 +4,8 @@ using Tracker.Dotnet.Auth.Models.Entities;
 
 namespace Tracker.Dotnet.Auth.Services
 {
+    // Wrapper doesn't need unit tests, it is created only because wrapped class doesn't have interface
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class UserManagerWrapper : IUserManagerWrapper
     {
         private readonly UserManager<User> _userManager;

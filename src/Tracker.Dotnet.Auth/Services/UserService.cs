@@ -73,13 +73,13 @@ namespace Tracker.Dotnet.Auth.Services
             }
 
             transaction.Commit();
-            return new Result<User>(user); // TODO: Проверить, присваивается ли ID пользователя
+            return new Result<User>(user);
         }
 
         public async Task<User?> FindUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
         {
             var hash = _tokenGeneratorService.GenerateRefreshTokenHash(refreshToken);
-            var refreshTokenDb = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.TokenHash.Equals(hash), cancellationToken);
+            var refreshTokenDb = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.TokenHash.Equals(hash) && x.Status == RefreshTokenStatus.Active, cancellationToken);
             return refreshTokenDb?.User;
         }
     }

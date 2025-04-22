@@ -54,11 +54,7 @@ namespace Tracker.Dotnet.Auth.Services
             var hashProvider = SHA256.Create();
             var hash = hashProvider.ComputeHash(bytes);
 
-            var str = Encoding.Default.GetString(hash);
-            var strUtf = Encoding.UTF8.GetString(hash);
-            var strAscii = Encoding.ASCII.GetString(bytes);
-
-            return strUtf;
+            return Convert.ToBase64String(hash); ;
         }
     }
 }
