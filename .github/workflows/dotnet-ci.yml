@@ -31,7 +31,11 @@ jobs:
             --workdir . \
             --assemblies '**/bin/**/*.dll' \
             --sources '**/*.cs' \
-            --exclude-sources '**/Program.cs' '**/Startup.cs' '**/Models/*' '**/Migrations/*' '**/Interfaces/*'
+            --exclude-sources "**/Program.cs" \
+            --exclude-sources "**/Startup.cs" \
+            --exclude-sources "**/Models/*" \
+            --exclude-sources "**/Migrations/*" \
+            --exclude-sources "**/Interfaces/*"
 
       - name: Build
         run: dotnet build Tracker.sln --no-restore --configuration Release
