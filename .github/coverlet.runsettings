@@ -4,17 +4,13 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>cobertura</Format>
-          <ExcludeByFile>
-            Tracker.Dotnet.Auth/Program.cs
-            Tracker.Dotnet.Auth/Migrations/*.cs
-            Tracker.Dotnet.Auth/Interfaces/*.cs
-            Tracker.Dotnet.Auth/Models/*.cs
-            **/Migrations/*.cs
-            **/Program.cs
-            **/Startup.cs
-            **/Interfaces/*.cs
-            **/Models/*.cs
-          </ExcludeByFile>
+          <Exclude>
+            [*.Program]*
+            [*.Startup]*
+            [*.Migrations.*]*
+            [*.Models.*]*
+            [*.Interfaces.*]*
+          </Exclude>
         </Configuration>
       </DataCollector>
     </DataCollectors>
