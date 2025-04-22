@@ -25,6 +25,9 @@ jobs:
       - name: Install MiniCover
         run: dotnet tool install --global minicover
 
+      - name: Build
+        run: dotnet build Tracker.sln --no-restore --configuration Release
+
       - name: Instrument code
         run: |
           minicover instrument \
@@ -36,9 +39,6 @@ jobs:
             --exclude-sources "**/Models/*" \
             --exclude-sources "**/Migrations/*" \
             --exclude-sources "**/Interfaces/*"
-
-      - name: Build
-        run: dotnet build Tracker.sln --no-restore --configuration Release
 
       - name: Test with coverage
         run: dotnet test Tracker.sln --no-build --configuration Release
