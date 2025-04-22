@@ -39,11 +39,9 @@ jobs:
           verbose: true
         # token is not needed for public repositories
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+      - name: Run SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v2
         with:
           projectBaseDir: .
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: poltaratskiy_Tracker   # take from SonarCloud
-          SONAR_ORGANIZATION: kpoltaratskiy # take from SonarCloud
