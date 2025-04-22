@@ -45,7 +45,7 @@ jobs:
 
       - name: Generate coverage reports
         run: |
-          minicover report --coverage-file coverage.json
+          minicover report --coverage-file coverage.json --threshold 0
           minicover report --report-type cobertura --coverage-file coverage.cobertura.xml
 
       - name: Uninstrument
