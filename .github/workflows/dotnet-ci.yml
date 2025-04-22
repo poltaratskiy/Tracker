@@ -22,14 +22,30 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore Tracker.sln
 
+      - name: Install MiniCover
+        run: dotnet tool install --global minicover
+
+      - name: Instrument code
+        run: |
+          minicover instrument \
+            --workdir . \
+            --assemblies '**/bin/**/*.dll' \
+            --sources '**/*.cs' \
+            --exclude-sources '**/Program.cs' '**/Startup.cs' '**/Models/*' '**/Migrations/*' '**/Interfaces/*'
+
       - name: Build
         run: dotnet build Tracker.sln --no-restore --configuration Release
 
       - name: Test with coverage
+        run: dotnet test Tracker.sln --no-build --configuration Release
+
+      - name: Uninstrument
+        run: minicover uninstrument
+
+      - name: Generate coverage reports
         run: |
-          dotnet test Tracker.sln --no-build --configuration Release \
-            --collect:"XPlat Code Coverage" \
-            --settings .github/coverlet.runsettings
+          minicover report --coverage-file coverage.json
+          minicover report --report-type cobertura --coverage-file coverage.cobertura.xml
 
       - name: Upload coverage report as artifact
         uses: actions/upload-artifact@v4
