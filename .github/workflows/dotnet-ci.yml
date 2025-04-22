@@ -45,8 +45,8 @@ jobs:
 
       - name: Generate coverage reports
         run: |
-          minicover report --coverage-file coverage.json --no-fail 
-          minicover opencoverreport --output coverage.opencover.xml --no-fail 
+          minicover report --coverage-file coverage.json --no-fail
+          minicover opencoverreport --output coverage.opencover.xml
 
       - name: Uninstrument
         run: minicover uninstrument
