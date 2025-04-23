@@ -1,0 +1,80 @@
+﻿name: Build and Test
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Tracker.sln
+
+      - name: Install MiniCover
+        run: dotnet tool install --global minicover
+
+      - name: Build
+        run: dotnet build Tracker.sln --no-restore --configuration Release
+
+      - name: Instrument code
+        run: |
+          minicover instrument \
+            --workdir . \
+            --assemblies '**/bin/**/*.dll' \
+            --sources '**/*.cs' \
+            --exclude-sources "**/Program.cs" \
+            --exclude-sources "**/Persistence/*" \
+            --exclude-sources "**/Configuration/*" \
+            --exclude-sources "**/Models/*" \
+            --exclude-sources "**/Migrations/*" \
+            --exclude-sources "**/Interfaces/*" \
+            --exclude-sources "**/*.Tests/*"
+
+      - name: Test with coverage
+        run: dotnet test Tracker.sln --no-build --configuration Release
+
+      - name: Generate coverage reports
+        run: |
+          minicover report --coverage-file coverage.json --no-fail
+          minicover opencoverreport --output coverage.opencover.xml
+
+      - name: Uninstrument
+        run: minicover uninstrument
+
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: coverage.opencover.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.opencover.xml
+          fail_ci_if_error: true
+          verbose: true
+        # token is not needed for public repositories
+
+  sonarqube:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
