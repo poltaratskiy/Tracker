@@ -11,6 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		promtail\config.yml = promtail\config.yml
 		Directory.Build.props = Directory.Build.props
+		.github\workflows\dotnet-ci.yml = .github\workflows\dotnet-ci.yml
+		README.md = README.md
+		.github\workflows\sonar-ci.yml = .github\workflows\sonar-ci.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Libs", "src\Tracker.Dotnet.Libs\Tracker.Dotnet.Libs.csproj", "{900A5733-DBF1-4475-9DE8-973165D257B2}"
