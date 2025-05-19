@@ -27,6 +27,7 @@ public class DiExtensionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton(Mock.Of<IProducerWrapper>());
+        services.AddHttpContextAccessor();
 
         services.AddKafkaProducer(cfg =>
         {
