@@ -11,7 +11,6 @@ public static class KafkaProducerDiExtensions
     /// <param name="services"></param>
     /// <param name="configure"></param>
     /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
     public static IServiceCollection AddKafkaProducer(this IServiceCollection services, Action<KafkaProducerBuilder> configure)
     {
         var options = new KafkaProducerOptions();

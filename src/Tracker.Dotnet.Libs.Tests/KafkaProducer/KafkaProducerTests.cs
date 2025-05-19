@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using Shouldly;
 using Tracker.Dotnet.Libs.KafkaProducer;
@@ -15,9 +16,11 @@ public class KafkaProducerTests
     [SetUp]
     public void Setup()
     {
+        var contextAccessorMock = new Mock<IHttpContextAccessor>();
+        contextAccessorMock.Setup(h => h.HttpContext).Returns(new DefaultHttpContext());
         _options = new KafkaProducerOptions();
         _producerMock = new Mock<IProducerWrapper>();
-        _kafkaProducer = new Libs.KafkaProducer.KafkaProducer(_options, _producerMock.Object);
+        _kafkaProducer = new Libs.KafkaProducer.KafkaProducer(_options, _producerMock.Object, contextAccessorMock.Object);
     }
 
     [Test]
