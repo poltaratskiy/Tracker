@@ -1,15 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Settings.Configuration;
 using System.Reflection;
-using Tracker.Dotnet.Auth.Configuration;
-using Tracker.Dotnet.Auth.Interfaces;
-using Tracker.Dotnet.Auth.Models.Entities;
-using Tracker.Dotnet.Auth.Persistence;
-using Tracker.Dotnet.Auth.Services;
+using System.Security.Claims;
+using System.Text;
 using Tracker.Dotnet.Libs.RefId;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +29,7 @@ var loggerConfiguration = new LoggerConfiguration()
     .Enrich.WithExceptionDetails()
     .WriteTo.Console(
         restrictedToMinimumLevel: LogEventLevel.Debug,
-        outputTemplate: "{Timestamp:O} [{Level:u3}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}")
+        outputTemplate: "{Timestamp:O} [{Application}] [{Level:u3}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}")
     .WriteTo.File(
     "/var/log/myservices/auth-service.log",
     rollingInterval: RollingInterval.Day,
@@ -41,8 +39,6 @@ var loggerConfiguration = new LoggerConfiguration()
 Log.Logger = loggerConfiguration
     .CreateLogger();
 
-
-
 try
 {
     var assemblyName = Assembly.GetCallingAssembly().GetName().Name;
@@ -51,42 +47,36 @@ try
     // Add services to the container.
     builder.Services.AddHttpContextAccessor();
 
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseNpgsql(configuration.GetConnectionString("ApplicationDbContext")));
-
-    builder.Services.AddIdentity<User, IdentityRole>()
-        .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddDefaultTokenProviders();
-
-    // Set up password rules. I need to make possible password 123 just for testing this project but never use it in production environment!
-    builder.Services.Configure<IdentityOptions>(options =>
-    {
-        options.Password.RequireDigit = true;
-        options.Password.RequiredLength = 3;
-        options.Password.RequireLowercase = false;
-        options.Password.RequireUppercase = false;
-        options.Password.RequireNonAlphanumeric = false;
-        options.Password.RequiredUniqueChars = 0;
-    });
-
-    builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
-
-    builder.Services
-        .AddScoped<ISignInManagerWrapper, SignInManagerWrapper>()
-        .AddScoped<IRoleManagerWrapper, RoleManagerWrapper>()
-        .AddScoped<IUserManagerWrapper, UserManagerWrapper>();
-
-    builder.Services.AddSingleton<ITokenGeneratorService, TokenGeneratorService>();
-
-    builder.Services
-        .AddScoped<IRefreshTokenDbService, RefreshTokenDbService>()
-        .AddScoped<IUnitOfWork, UnitOfWork>()
-        .AddScoped<IUserService, UserService>()
-        .AddScoped<AuthService>();
-
     services.AddControllers();
     services.AddEndpointsApiExplorer();
-    services.AddSwaggerGen();
+    services.AddSwaggerGen(options =>
+    {
+        options.AddSecurityDefinition("Bearer", new()
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Input JWT-token only (without Bearer)"
+        });
+
+        // Point out that all endpoints have this scheme
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                 new OpenApiSecurityScheme
+                 {
+                     Reference = new()
+                     {
+                         Type = ReferenceType.SecurityScheme,
+                         Id = "Bearer"
+                     }
+                 },
+                 Array.Empty<string>()
+             }
+         });
+    });
 
     builder.Host.UseSerilog((context, services, config) =>
     {
@@ -111,7 +101,7 @@ try
 
         //elastic or something similar
         config.WriteTo.File(
-            "/var/log/myservices/auth-service.log",
+            "/var/log/myservices/users-service.log",
             rollingInterval: RollingInterval.Day,
             retainedFileCountLimit: 7,
             outputTemplate: "{Timestamp:O} [{Application}] [{Level:u3}] [{RefId}] [{SourceContext}] {Scope:lj} {Message:lj}{NewLine}{Exception}");
@@ -130,30 +120,32 @@ try
         }
     });
 
+    var jwtKey = builder.Configuration["Jwt:SymmetricKey"] ?? throw new Exception("Jwt:SymmetricKey is missing");
+
+    // Adding JWT Authentication. Don't check issuer and audience for this test case. We don't use database because it's in another service.
+    // We trust the token if signature is valid and it means that the user exists and claims are correct.
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+
+                RoleClaimType = ClaimTypes.Role,
+                NameClaimType = ClaimTypes.Name
+            };
+        });
+
+    // Add authorization
+    builder.Services.AddAuthorization();
+
     var app = builder.Build();
     Log.Information($"Configuring services at {assemblyName} has been finished");
-
-    using (var scope = app.Services.CreateScope())
-    {
-        var scopeProvider = scope.ServiceProvider;
-        var logger = scopeProvider.GetRequiredService<ILogger<Program>>();
-
-        try
-        {
-            logger.LogInformation("Starting Postgres DB migration...");
-            var db = scopeProvider.GetRequiredService<ApplicationDbContext>();
-            db.Database.Migrate();
-
-            logger.LogInformation("DB migration successfully finished. Start seeding test data...");
-            await SeedData.AddRoles(scopeProvider);
-            logger.LogInformation("Seeding test data successfully finished.");
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error occured while migrating db, application won't be started");
-            throw;
-        }
-    }
 
     app.UseRefId();
 
@@ -163,6 +155,10 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    // Order is important, first authentication, then authorization
+    app.UseAuthentication();
+    app.UseAuthorization();
 
     app.MapControllers();
 
@@ -176,32 +172,4 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-
-
-/*builder.Services.AddAuthentication(o => для сервиса где нужна авторизация
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).
-    .AddJwtBearer(...);
-builder.Services.AddAuthorization(); // потом посмотреть подробнее
-*/
-
-
-
-
-
-
-/* app.UseHttpsRedirection();
- * Disabled https only for this pet project to avoid issues with certificate installations.
- * Authorization service which provides sensitive information such as passwords and tokens,
- * MUST use https on production environment
- */
-
-/*app.UseAuthentication(); понадобятся в обычных сервисах
-app.UseAuthorization();*/
-
-
-
 

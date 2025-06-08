@@ -12,6 +12,19 @@
     volumes:
       - ./logging:/var/log/myservices
 
+  tracker.dotnet.users:
+    image: ${DOCKER_REGISTRY-}trackerdotnetusers
+    ports:
+      - "8081:80"
+    build:
+      context: .
+      dockerfile: src/Tracker.Dotnet.Users/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    volumes:
+      - ./logging:/var/log/myservices
+
   database:
     image: postgres:17.4-alpine3.21
     ports:
