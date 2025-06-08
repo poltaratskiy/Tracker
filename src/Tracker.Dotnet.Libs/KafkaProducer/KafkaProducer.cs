@@ -1,6 +1,5 @@
 ﻿using Confluent.Kafka;
 using Microsoft.AspNetCore.Http;
-using Polly;
 using System.Text;
 using System.Text.Json;
 
