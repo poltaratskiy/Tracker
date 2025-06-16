@@ -115,7 +115,7 @@ public class KafkaGeneralConsumerTests
         var kafka = provider.GetRequiredService<IKafkaGeneralConsumer>();
 
         await kafka.StartConsumeAsync(cts.Token);
-        //await Task.Delay(50);
+        await Task.Delay(50);
 
         handler.WasCalled.ShouldBeTrue();
         consumerWrapperMock.Verify(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>()), Times.Never);

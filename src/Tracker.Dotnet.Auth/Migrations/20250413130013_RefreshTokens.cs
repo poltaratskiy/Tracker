@@ -13,7 +13,7 @@ namespace Tracker.Dotnet.Auth.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "RefreshToken",
+                name: "RefreshTokens",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -25,9 +25,9 @@ namespace Tracker.Dotnet.Auth.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RefreshToken", x => x.Id);
+                    table.PrimaryKey("PK_RefreshTokens", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RefreshToken_AspNetUsers_UserId",
+                        name: "FK_RefreshTokens_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -36,7 +36,7 @@ namespace Tracker.Dotnet.Auth.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshToken_UserId",
-                table: "RefreshToken",
+                table: "RefreshTokens",
                 column: "UserId");
         }
 
@@ -44,7 +44,7 @@ namespace Tracker.Dotnet.Auth.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "RefreshToken");
+                name: "RefreshTokens");
         }
     }
 }

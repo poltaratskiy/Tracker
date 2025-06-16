@@ -10,6 +10,7 @@ using Tracker.Dotnet.Auth.Interfaces;
 using Tracker.Dotnet.Auth.Models.Entities;
 using Tracker.Dotnet.Auth.Persistence;
 using Tracker.Dotnet.Auth.Services;
+using Tracker.Dotnet.Libs.Exceptions;
 using Tracker.Dotnet.Libs.RefId;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -156,6 +157,7 @@ try
     }
 
     app.UseRefId();
+    app.UseMyExceptionHandler();
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsProduction())

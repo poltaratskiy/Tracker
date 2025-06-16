@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Tracker.Dotnet.Libs.RefId
 {
     /// <summary>
     /// Just adds pass-through request Id to the context to be available for enrichers.
     /// </summary>
-    public class RefIdMiddleware
+    internal class RefIdMiddleware
     {
         private readonly RequestDelegate _next;
 
