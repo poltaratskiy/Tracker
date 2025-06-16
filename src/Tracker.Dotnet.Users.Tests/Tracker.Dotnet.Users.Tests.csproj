@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tracker\src\Tracker.Dotnet.Users\Tracker.Dotnet.Users.csproj" />
+    <ProjectReference Include="..\Tracker.Dotnet.Users\Tracker.Dotnet.Users.csproj" />
   </ItemGroup>
 
   <ItemGroup>
