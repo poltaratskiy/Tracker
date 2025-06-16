@@ -24,7 +24,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Auth.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Users", "src\Tracker.Dotnet.Users\Tracker.Dotnet.Users.csproj", "{5676107E-161B-40DB-AAB8-7B289139E091}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Users.Tests", "..\Tracker.Dotnet.Users.Tests\Tracker.Dotnet.Users.Tests.csproj", "{6B01D01A-5030-4332-8266-F90A0880D208}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Users.Tests", "src\Tracker.Dotnet.Users.Tests\Tracker.Dotnet.Users.Tests.csproj", "{6B01D01A-5030-4332-8266-F90A0880D208}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
