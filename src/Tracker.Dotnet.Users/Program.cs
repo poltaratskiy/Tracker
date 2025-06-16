@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -8,7 +9,9 @@ using Serilog.Settings.Configuration;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using Tracker.Dotnet.Libs.Exceptions;
 using Tracker.Dotnet.Libs.RefId;
+using Tracker.Dotnet.Users.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +49,9 @@ try
 
     // Add services to the container.
     builder.Services.AddHttpContextAccessor();
+
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(configuration.GetConnectionString("ApplicationDbContext")));
 
     services.AddControllers();
     services.AddEndpointsApiExplorer();
@@ -147,7 +153,30 @@ try
     var app = builder.Build();
     Log.Information($"Configuring services at {assemblyName} has been finished");
 
+    using (var scope = app.Services.CreateScope())
+    {
+        var scopeProvider = scope.ServiceProvider;
+        var logger = scopeProvider.GetRequiredService<ILogger<Program>>();
+
+        try
+        {
+            logger.LogInformation("Starting Postgres DB migration...");
+            var db = scopeProvider.GetRequiredService<ApplicationDbContext>();
+            db.Database.Migrate();
+
+            logger.LogInformation("DB migration successfully finished. Start seeding test data...");
+            await SeedData.Seed(scopeProvider);
+            logger.LogInformation("Seeding test data successfully finished.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error occured while migrating db, application won't be started");
+            throw;
+        }
+    }
+
     app.UseRefId();
+    app.UseMyExceptionHandler();
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsProduction())

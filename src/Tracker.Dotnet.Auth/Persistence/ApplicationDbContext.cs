@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 using Tracker.Dotnet.Auth.Models.Entities;
 
 namespace Tracker.Dotnet.Auth.Persistence

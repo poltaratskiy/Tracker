@@ -181,7 +181,7 @@ namespace Tracker.Dotnet.Auth.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshToken");
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Tracker.Dotnet.Auth.Models.Entities.User", b =>

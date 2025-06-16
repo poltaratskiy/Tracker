@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Tracker.Dotnet.Auth.Models.Entities
 {
-    [Table("RefreshToken")]
+    [Table("RefreshTokens")]
     public class RefreshToken
     {
         [Key]

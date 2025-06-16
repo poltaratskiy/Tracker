@@ -1,5 +1,5 @@
-﻿using Tracker.Dotnet.Auth.Models;
-using Tracker.Dotnet.Auth.Models.Entities;
+﻿using Tracker.Dotnet.Auth.Models.Entities;
+using Tracker.Dotnet.Libs.Exceptions;
 
 namespace Tracker.Dotnet.Auth.Interfaces
 {
@@ -16,7 +16,15 @@ namespace Tracker.Dotnet.Auth.Interfaces
 
         public Task<string> GetUserRoleAsync(User user, CancellationToken cancellationToken);
 
-        public Task<Result<User>> CreateUserAsync(User user, string password, string role);
+        /// <summary>
+        /// Creates user
+        /// </summary>
+        /// <param name="user"> User data </param>
+        /// <param name="password"> Password </param>
+        /// <param name="role"> Role name</param>
+        /// <returns> Created user</returns>
+        /// <exception cref="ApiException"> Throws if could not create user </exception>
+        public Task<User> CreateUserAsync(User user, string password, string role);
 
         public Task<User?> FindUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     }

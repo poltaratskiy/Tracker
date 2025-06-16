@@ -4,9 +4,9 @@ using Tracker.Dotnet.Auth.Models.Entities;
 
 namespace Tracker.Dotnet.Auth.Persistence
 {
-    public static class SeedData
+    internal static class SeedData
     {
-        public static async Task AddRoles(IServiceProvider services)
+        internal static async Task AddRoles(IServiceProvider services)
         {
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = services.GetRequiredService<UserManager<User>>();

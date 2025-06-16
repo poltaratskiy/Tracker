@@ -2,10 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Tracker.Dotnet.Auth.Models;
 using Tracker.Dotnet.Auth.Services;
+using Tracker.Dotnet.Libs.ApiResponse;
 
 namespace Tracker.Dotnet.Auth.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api")]
     [ApiController]
     [AllowAnonymous]
     public class HomeController : ControllerBase
@@ -23,37 +24,19 @@ namespace Tracker.Dotnet.Auth.Controllers
         
         [HttpPost]
         [Route("login")]
-        [ProducesDefaultResponseType(typeof(Result<LoginResponse>))]
-        public async Task<IActionResult> Login(string login, string password, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResponse<LoginResponse>>> Login(string login, string password, CancellationToken cancellationToken)
         {
             var result = await _loginService.LoginAsync(login, password, cancellationToken);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return Unauthorized(result);
-            }
+            return ApiResponse<LoginResponse>.Success(result);
         }
 
         [HttpPost]
         [Route("refresh")]
-        [ProducesDefaultResponseType(typeof(Result<LoginResponse>))]
-        public async Task<IActionResult> Refresh(string refreshToken, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResponse<LoginResponse>>> Refresh(string refreshToken, CancellationToken cancellationToken)
         {
             // This method is also anonymous because access token may be expired
             var result = await _loginService.RefreshTokenAsync(refreshToken, cancellationToken);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return Unauthorized(result);
-            }
+            return ApiResponse<LoginResponse>.Success(result);
         }
 
         [HttpPost]
