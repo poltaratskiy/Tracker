@@ -1,26 +1,26 @@
 ﻿# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 
 
 # This stage is used to build the service project
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY src/Tracker.Dotnet.Users/Tracker.Dotnet.Users.csproj ./Tracker.Dotnet.Users/
-COPY src/Tracker.Dotnet.Users/. ./Tracker.Dotnet.Users/
-WORKDIR /src/Tracker.Dotnet.Users
-RUN dotnet restore "Tracker.Dotnet.Users.csproj"
-RUN dotnet build "Tracker.Dotnet.Users.csproj" -c "$BUILD_CONFIGURATION" -o /app/build
+COPY src/Tracker.Dotnet.SSO.Api/Tracker.Dotnet.SSO.Api.csproj ./Tracker.Dotnet.SSO.Api/
+COPY src/Tracker.Dotnet.SSO.Api/. ./Tracker.Dotnet.SSO.Api/
+WORKDIR /src/Tracker.Dotnet.SSO.Api
+RUN dotnet restore "Tracker.Dotnet.SSO.Api.csproj"
+RUN dotnet build "Tracker.Dotnet.SSO.Api.csproj" -c "$BUILD_CONFIGURATION" -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Tracker.Dotnet.Users.csproj" -c "$BUILD_CONFIGURATION" -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Tracker.Dotnet.SSO.Api.csproj" -c "$BUILD_CONFIGURATION" -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
@@ -28,4 +28,4 @@ RUN adduser --disabled-password --no-create-home --gecos "" appuser
 WORKDIR /app
 COPY --from=publish /app/publish .
 USER appuser
-ENTRYPOINT ["dotnet", "Tracker.Dotnet.Users.dll"]
+ENTRYPOINT ["dotnet", "Tracker.Dotnet.SSO.Api.dll"]

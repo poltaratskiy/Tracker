@@ -11,11 +11,11 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Tracker.Dotnet.Auth.csproj", "."]
-RUN dotnet restore "./Tracker.Dotnet.Auth.csproj"
-COPY . .
-WORKDIR "/src/."
-RUN dotnet build "./Tracker.Dotnet.Auth.csproj" -c "$BUILD_CONFIGURATION" -o /app/build
+COPY src/Tracker.Dotnet.Auth/Tracker.Dotnet.Auth.csproj ./Tracker.Dotnet.Auth/
+COPY src/Tracker.Dotnet.Auth/. ./Tracker.Dotnet.Auth/
+WORKDIR /src/Tracker.Dotnet.Auth
+RUN dotnet restore "Tracker.Dotnet.Auth.csproj"
+RUN dotnet build "Tracker.Dotnet.Auth.csproj" -c "$BUILD_CONFIGURATION" -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
