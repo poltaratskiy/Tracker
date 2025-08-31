@@ -112,19 +112,47 @@
 
   "clientScopes": [
     {
+      "id": "2e276fd5-1e0b-458a-a303-15b0117ad068",
+      "name": "aud",
+      "description": "",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "true",
+        "gui.order": "",
+        "consent.screen.text": ""
+      },
+      "protocolMappers": [
+        {
+          "id": "a505c7d3-3a1d-4952-9822-70348da2f8fb",
+          "name": "Tracker audience mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "false",
+            "lightweight.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "included.custom.audience": "tracker"
+          }
+        }
+      ]
+    },
+    {
       "name": "roles-as-roles",
-      "description": "Put realm roles into 'roles' claim (array of strings) for access token",
+      "description": "Put realm roles into 'role' claim (array of strings) for access token",
       "protocol": "openid-connect",
       "attributes": { "include.in.token.scope": "true" },
       "protocolMappers": [
         {
-          "name": "realm roles -> roles",
+          "name": "realm roles -> role",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-realm-role-mapper",
           "consentRequired": false,
           "config": {
             "multivalued": "true",
-            "claim.name": "roles",
+            "claim.name": "role",
             "jsonType.label": "String",
             "access.token.claim": "true",
             "id.token.claim": "false",
@@ -193,7 +221,8 @@
     "profile",
     "email",
     "roles-as-roles",
-    "user_info"
+    "user_info",
+    "aud"
   ],
 
   "clients": [
@@ -206,22 +235,22 @@
       "serviceAccountsEnabled": false,
       "redirectUris": [ "http://localhost:5173/*" ],
       "webOrigins": [ "http://localhost:5173" ],
-      "defaultClientScopes": [ "user_info", "roles-as-roles", "offline_access" ],
+      "defaultClientScopes": [ "user_info", "roles-as-roles", "offline_access", "aud" ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "access.token.lifespan": "300"
       }
     },
     {
-      "clientId": "ui-app-2",
+      "clientId": "users-service",
       "publicClient": true,
       "protocol": "openid-connect",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": [ "http://localhost:5174/*" ],
-      "webOrigins": [ "http://localhost:5174" ],
-      "defaultClientScopes": [ "user_info", "roles-as-roles", "offline_access" ],
+      "redirectUris": [ "http://localhost:5010/*" ],
+      "webOrigins": [ "http://localhost:5010" ],
+      "defaultClientScopes": [ "user_info", "roles-as-roles", "offline_access", "aud" ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "access.token.lifespan": "300"
@@ -231,7 +260,7 @@
       "clientId": "api",
       "bearerOnly": true,
       "protocol": "openid-connect",
-      "defaultClientScopes": [ "user_info", "roles-as-roles", "offline_access" ]
+      "defaultClientScopes": [ "user_info", "roles-as-roles", "offline_access", "aud" ]
     }
   ],
 
