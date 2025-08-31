@@ -1,70 +1,49 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Tracker.Dotnet.Libs.ApiResponse;
-using Tracker.Dotnet.Users.Interfaces;
-using Tracker.Dotnet.Users.Models;
 
 namespace Tracker.Dotnet.Users.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
 public class UsersController : ControllerBase
 {
-    private readonly IRolesService _rolesService;
-    private readonly IUsersService _usersService;
-
-    public UsersController(IRolesService rolesService, IUsersService usersService)
-    {
-        _rolesService = rolesService;
-        _usersService = usersService;
-    }
-
+    [AllowAnonymous]
     [HttpGet]
-    [Route("/api/roles")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<RoleDto>>>> GetRoles(CancellationToken cancellationToken)
+    [Route("anon")]
+    public IActionResult GetAnon()
     {
-        var roles = await _rolesService.GetRolesAsync(cancellationToken);
-        return ApiResponse<IEnumerable<RoleDto>>.Success(roles);
+        return Ok();
     }
 
+    [Authorize]
     [HttpGet]
-    [Route("")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetUsers(CancellationToken cancellationToken)
+    [Route("auth")]
+    public IActionResult GetAuthorized()
     {
-        var users = await _usersService.GetUsersAsync(cancellationToken);
-        return ApiResponse<IEnumerable<UserDto>>.Success(users);
+        return Ok();
     }
 
+    [Authorize(Roles = "Admin")] // case sensitivity
     [HttpGet]
-    [Route("{login}")]
-    public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(string login, CancellationToken cancellationToken)
+    [Route("admin")]
+    public IActionResult GetAdmin()
     {
-        var user = await _usersService.GetUserAsync(login, cancellationToken);
-        return ApiResponse<UserDto>.Success(user);
+        return Ok();
     }
 
-    [HttpPost]
-    [Route("")]
-    public async Task<ActionResult<ApiResponse<UserDto>>> Create(string login, string displayName, string role, CancellationToken cancellationToken)
+    [Authorize(Roles = "admin")]
+    [HttpGet]
+    [Route("admin2")]
+    public IActionResult GetAdmin2()
     {
-        var user = await _usersService.CreateAsync(login, displayName, role, cancellationToken);
-        return ApiResponse<UserDto>.Success(user);
+        return Ok();
     }
 
-    [HttpPut]
-    [Route("{login}")]
-    public async Task<ActionResult<ApiResponse<UserDto>>> Edit(string login, string displayName, string role, CancellationToken cancellationToken)
+    [Authorize(Roles = "manager")]
+    [HttpGet]
+    [Route("manager")]
+    public IActionResult GetManager()
     {
-        var user = await _usersService.EditAsync(login, displayName, role, cancellationToken);
-        return ApiResponse<UserDto>.Success(user);
-    }
-
-    [HttpDelete]
-    [Route("{login}")]
-    public async Task<IActionResult> Deactivate(string login, CancellationToken cancellationToken)
-    {
-        await _usersService.DeactivateAsync(login, cancellationToken);
         return Ok();
     }
 }
