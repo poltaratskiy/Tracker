@@ -1,1 +1,1 @@
-﻿CREATE DATABASE keycloak OWNER postgres;
+﻿CREATE DATABASE fusionauth OWNER postgres;
