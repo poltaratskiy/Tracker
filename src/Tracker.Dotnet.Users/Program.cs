@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -9,6 +10,7 @@ using System.Reflection;
 using System.Security.Claims;
 using Tracker.Dotnet.Libs.Exceptions;
 using Tracker.Dotnet.Libs.RefId;
+using Tracker.Dotnet.Users.External;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,7 +53,7 @@ try
         o.SwaggerDoc("v1", new OpenApiInfo { Title = "Keycloak-protected API", Version = "v1" });
         o.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            Description = "Insert your access token from Keycloak. Format: only token without Bearer and etc.",
+            Description = "Insert your access token from FusionAuth. Format: only token without Bearer and etc.",
             Name = "Authorization",
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.Http,
@@ -130,7 +132,7 @@ try
             options.Audience = audience;
             options.RequireHttpsMetadata = requireHttps;
 
-            options.TokenValidationParameters.NameClaimType = "preferred_username";  // username is in this claim
+            options.TokenValidationParameters.NameClaimType = "username";  // username is in this claim
             options.TokenValidationParameters.RoleClaimType = ClaimTypes.Role; // roles are in this claim
             options.TokenValidationParameters.ValidIssuer = authority;
             options.TokenValidationParameters.ValidAudience = audience;
@@ -149,6 +151,9 @@ try
 
     // Add authorization
     builder.Services.AddAuthorization();
+
+    services.AddExternalServices(configuration);
+    services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
     var app = builder.Build();
     Log.Information($"Configuring services at {assemblyName} has been finished");
@@ -173,7 +178,7 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Application Tracker.Dotnet.Auth terminated unexpectedly");
+    Log.Fatal(ex, $"Application {appName} terminated unexpectedly");
 }
 finally
 {

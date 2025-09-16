@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Serilog;
 using Serilog.Extensions.Logging;
 using Shouldly;
 using System.Text.Json;
-using Tracker.Dotnet.Libs.ApiResponse;
 using Tracker.Dotnet.Libs.Exceptions;
 
 namespace Tracker.Dotnet.Libs.Tests.Exceptions;
@@ -15,12 +15,12 @@ namespace Tracker.Dotnet.Libs.Tests.Exceptions;
 [TestFixture]
 public class ExceptionHandlerMiddlewareTests
 {
-    private static async Task<ApiResponse<string>> ReadJsonResponse(HttpContext context)
+    private static async Task<ProblemDetails> ReadJsonResponse(HttpContext context)
     {
         context.Response.Body.Seek(0, SeekOrigin.Begin);
-        return await JsonSerializer.DeserializeAsync<ApiResponse<string>>(context.Response.Body, new JsonSerializerOptions
+        return await JsonSerializer.DeserializeAsync<ProblemDetails>(context.Response.Body, new JsonSerializerOptions
         {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
         });
     }
 
@@ -69,11 +69,8 @@ public class ExceptionHandlerMiddlewareTests
         var response = await ReadJsonResponse(context);
 
         // Assert
-        context.Response.StatusCode.ShouldBe(StatusCodes.Status401Unauthorized);
-        response.Data.ShouldBeNull();
-
-        response.Error.Message.ShouldBe("Incorrect login or password");
-        response.Error.Details.ShouldBeNull();
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status403Forbidden);
+        response.Title.ShouldBe("Incorrect login or password");
     }
 
     [Test]
@@ -94,8 +91,7 @@ public class ExceptionHandlerMiddlewareTests
 
         // Assert
         context.Response.StatusCode.ShouldBe(StatusCodes.Status500InternalServerError);
-        response.Data.ShouldBeNull();
-        response.Error.Message.ShouldBe("Internal Server Error, please repeat operation or contact an administrator");
+        response.Title.ShouldBe("An error occurred while processing your request.");
     }
 
     [Test]
@@ -104,9 +100,7 @@ public class ExceptionHandlerMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-
-        var details = new[] { "Email is required", "Password too short" };
-        var exception = new ApiException("Validation failed", details);
+        var exception = new ApiException("Validation failed");
 
         var nextMock = new Mock<RequestDelegate>();
         nextMock.Setup(x => x(It.IsAny<HttpContext>())).ThrowsAsync(exception);
@@ -119,9 +113,8 @@ public class ExceptionHandlerMiddlewareTests
 
         // Assert
         context.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
-        response.Data.ShouldBeNull();
-        response.Error.Message.ShouldBe("Validation failed");
-        response.Error.Details.ShouldBe(details);
+        response.Title.ShouldBe("One or more validation errors occurred.");
+        response.Detail.ShouldBe("Validation failed");
     }
 }
 

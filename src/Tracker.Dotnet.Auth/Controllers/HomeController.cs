@@ -51,7 +51,7 @@ public class HomeController : ControllerBase
     [Route("test")]
     public async Task<IActionResult> Test()
     {
-        _logger.LogInformation("Test: {parameter}", "parameter value");
+        _logger.LogInformation("Test: {parameter}");
         return Ok("Test");
     }
 }

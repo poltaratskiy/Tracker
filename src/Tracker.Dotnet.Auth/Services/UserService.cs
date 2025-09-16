@@ -61,7 +61,7 @@ public class UserService : IUserService
         if (!createResult.Succeeded)
         {
             await transaction.RollbackAsync();
-            throw new ApiException("Error occured while creating user", createResult.Errors.Select(x => x.Description));
+            throw new ApiException("Error occured while creating user");
         }
 
         var roleResult = await _userManager.AddUserToRoleAsync(user, role);
@@ -69,7 +69,7 @@ public class UserService : IUserService
         if (!roleResult.Succeeded)
         {
             await transaction.RollbackAsync();
-            throw new ApiException("Error occured while adding user to role", roleResult.Errors.Select(x => x.Description));
+            throw new ApiException("Error occured while adding user to role");
         }
 
         transaction.Commit();
