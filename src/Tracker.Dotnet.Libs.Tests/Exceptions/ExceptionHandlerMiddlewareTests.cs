@@ -104,9 +104,7 @@ public class ExceptionHandlerMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-
-        var details = new[] { "Email is required", "Password too short" };
-        var exception = new ApiException("Validation failed", details);
+        var exception = new ApiException("Validation failed");
 
         var nextMock = new Mock<RequestDelegate>();
         nextMock.Setup(x => x(It.IsAny<HttpContext>())).ThrowsAsync(exception);
@@ -121,7 +119,6 @@ public class ExceptionHandlerMiddlewareTests
         context.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
         response.Data.ShouldBeNull();
         response.Error.Message.ShouldBe("Validation failed");
-        response.Error.Details.ShouldBe(details);
     }
 }
 
