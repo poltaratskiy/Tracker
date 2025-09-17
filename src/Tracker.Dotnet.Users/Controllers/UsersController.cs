@@ -23,44 +23,4 @@ public class UsersController : ControllerBase
     {
         return await _mediator.Send(new GetUsersQuery(), cancellationToken);
     }
-
-    [AllowAnonymous]
-    [HttpGet]
-    [Route("anon")]
-    public IActionResult GetAnon()
-    {
-        return Ok();
-    }
-
-    [Authorize]
-    [HttpGet]
-    [Route("auth")]
-    public IActionResult GetAuthorized()
-    {
-        return Ok();
-    }
-
-    [Authorize(Roles = "Admin")] // case sensitivity
-    [HttpGet]
-    [Route("admin")]
-    public IActionResult GetAdmin()
-    {
-        return Ok();
-    }
-
-    [Authorize(Roles = "admin")]
-    [HttpGet]
-    [Route("admin2")]
-    public IActionResult GetAdmin2()
-    {
-        return Ok();
-    }
-
-    [Authorize(Roles = "manager")]
-    [HttpGet]
-    [Route("manager")]
-    public IActionResult GetManager()
-    {
-        return Ok();
-    }
 }

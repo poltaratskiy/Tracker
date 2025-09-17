@@ -8,7 +8,8 @@ internal static class DependencyExtensions
 {
     internal static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<FusionAuthApiConfiguration>(configuration.GetSection("FusionAuthApi"))
+        services.Configure<FusionAuthApiConfiguration>(configuration.GetSection("FusionAuthApi"));
+        services
             .AddScoped<FusionAuthServiceAuthHandler>()
             .AddRefitClient<IFusionAuthClient>()
             .ConfigureHttpClient((sp, options) =>

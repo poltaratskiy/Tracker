@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using NSwag;
 using NSwag.Generation.Processors.Security;
+using System.Reflection;
 
 namespace Tracker.Dotnet.Libs.Swagger;
 
@@ -34,12 +35,12 @@ public static class SwaggerExtensions
         return services;
     }
 
-    internal static IApplicationBuilder UseTrackerSwagger(this IApplicationBuilder app, string serviceName)
+    public static IApplicationBuilder UseTrackerSwagger(this IApplicationBuilder app)
     {
         app.UseOpenApi();
         app.UseSwaggerUi(options =>
         {
-            options.DocumentTitle = serviceName;
+            options.DocumentTitle = Assembly.GetCallingAssembly().GetName().Name;
             options.OperationsSorter = "alpha";
             options.TagsSorter = "alpha";
 

@@ -23,7 +23,7 @@ internal class ExceptionHandlerMiddleware
         }
         catch (ApiException ex)
         {
-            _logger.LogInformation(ex, "Validation exception occured, message: {message}, details: {details}", ex.Message);
+            _logger.LogInformation(ex, "Validation exception occured, message: {message}", ex.Message);
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
