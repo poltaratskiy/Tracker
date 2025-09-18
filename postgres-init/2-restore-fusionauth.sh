@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 set -e
 pg_restore --username "$POSTGRES_USER" \
   --dbname "fusionauth" \
