@@ -12,6 +12,21 @@
     volumes:
       - ./logging:/var/log/myservices
 
+  tracker.react.users:
+    build:
+      context: ./src/Tracker.React.Users
+      dockerfile: Dockerfile
+    #container_name: frontend
+    ports:
+      - "5000:5000" 
+    volumes:
+      - ./src/Tracker.React.Users:/app         # live code updates
+      - /app/node_modules       # anonymous volume, not to make conflicts with host node_modules
+    environment:
+      # Sometimes Docker/WSL need poll-watchers
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+
   database:
     image: postgres:17.6-alpine3.21
     ports:
