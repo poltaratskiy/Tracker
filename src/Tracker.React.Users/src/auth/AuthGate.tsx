@@ -16,8 +16,8 @@ export default function AuthGate({ children }: PropsWithChildren) {
     }
   }, [auth.isLoading, auth.isAuthenticated, auth.activeNavigator, auth.error, location, auth]);
 
-  if (auth.isLoading || !auth.isAuthenticated) {
-    return null; // can show spinner if want
-  }
+  if (auth.isLoading || auth.activeNavigator || !auth.isAuthenticated)
+    return; // can show spinner if want
+
   return <>{children}</>;
 }

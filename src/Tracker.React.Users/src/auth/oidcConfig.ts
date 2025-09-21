@@ -11,9 +11,10 @@ export const oidcConfig: UserManagerSettings = {
   response_type: 'code',
   scope: import.meta.env.VITE_OIDC_SCOPE || 'openid',
   // Currently is more simple: without silent renew
-  automaticSilentRenew: false,
+  automaticSilentRenew: import.meta.env.VITE_OIDC_SILENT_RENEW!,
   loadUserInfo: false,
   monitorSession: true,
+  silent_redirect_uri: import.meta.env.VITE_OIDC_SILENT_REDIRECT_URI!,
   // Storage by default — localStorage. If you want to 
   // almost always would redirect to SSO and nothing was here — later can make it in-memory.
 };

@@ -1,17 +1,18 @@
 import { AuthButtons } from './components/AuthButtons';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import AuthGate from './auth/authGate';
+//import { ProtectedRoute } from './components/ProtectedRoute';
+import AuthGate from './auth/AuthGate';
 import { Outlet } from 'react-router';
 
-function Secret() {
-  return <div style={{ marginTop: 8 }}>🔒 Protected content</div>;
-}
+//function Secret() {
+//  return <div style={{ marginTop: 8 }}>🔒 Protected content</div>;
+//}
 
 export default function App() {
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Vite + React + react-oidc-context</h1>
-      <AuthGate>
+
+    <AuthGate>
+      <div style={{ padding: 16 }}>
+        <h1>Vite + React + react-oidc-context</h1>
         <header style={{ padding: 12, borderBottom: "1px solid #eee" }}>
           {/* logo/navigation */}
           <AuthButtons />
@@ -19,15 +20,9 @@ export default function App() {
         <main>
           <Outlet />
         </main>
+      </div>
+    </AuthGate>
 
-      </AuthGate>
-
-      <AuthButtons />
-      <hr />
-      <ProtectedRoute>
-        <Secret />
-      </ProtectedRoute>
-    </div>
   );
 }
 
