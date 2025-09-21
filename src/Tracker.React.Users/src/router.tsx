@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from './App';
+import { CallbackPlaceholder } from "./components/CallbackPlaceholder";
 
 export const router = createBrowserRouter([
   {
@@ -10,5 +11,5 @@ export const router = createBrowserRouter([
       { path: "about", element: <About /> },
     ],*/
   },
-  { path: '/callback', element: <OidcCallback /> },
+  { path: "/callback", element: <CallbackPlaceholder /> }
 ]);
