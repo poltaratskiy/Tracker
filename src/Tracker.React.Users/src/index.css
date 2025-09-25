@@ -27,12 +27,33 @@ body {
   display: flex;
   place-items: center;
   min-width: 320px;
-  min-height: 100vh;
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+header {
+  padding: 1rem 3rem;
+  vertical-align: center;
+  width: 100vw;
+  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
+}
+
+.header-content {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6rem;
+}
+
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  margin-right: 10rem;
 }
 
 button {
