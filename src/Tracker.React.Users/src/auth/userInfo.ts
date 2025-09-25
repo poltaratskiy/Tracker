@@ -29,11 +29,11 @@ function readFromStorage(): UserInfo {
 export function useUserInfo(): UserInfo {
   const auth = useAuth();
 
-  // 1) Начальное значение — из storage (чтобы F5 сразу что-то показал)
+  // 1) Initial state from storage (to show something after presses F5)
   const [userInfo, setUserInfo] = useState<UserInfo>(() => readFromStorage());
 
   useEffect(() => {
-    // 2) Когда появился/обновился access_token — парсим и обновляем состояние + storage
+    // 2) After access_token appeared — parsing and refreshing token and storage
     const token = auth.user?.access_token;
     if (!token) return;
 
