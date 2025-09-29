@@ -12,7 +12,7 @@ export function CallbackPlaceholder() {
   useEffect(() => {
     if (!isAuthenticated) return;
     const target = (user?.state as string | undefined) || "/";
-    const u = new URL(target, window.location.origin);
+    const u = new URL(target, globalThis.location.origin);
 
     // remove parameters from query
     stripParamsFromUrl(u, ["iss"]);
