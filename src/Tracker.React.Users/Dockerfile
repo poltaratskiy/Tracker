@@ -10,8 +10,9 @@ USER node
 RUN npm ci --ignore-scripts
 
 # Source files
-COPY --chown=node:node public ./public
-RUN chmod -R u=rwX,go=rX ./public
+COPY --chown=root:root --chmod=755 public ./public
+RUN chown -R node:node ./public && \
+    chmod -R u=rwX,go=rX ./public
 
 COPY --chown=node:node src ./src
 RUN chmod -R u=rwX,go=rX ./src
