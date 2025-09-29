@@ -23,7 +23,7 @@
       - ./src/Tracker.React.Users:/app         # live code updates
       - users_node_modules:/app/node_modules       # anonymous volume, not to make conflicts with host node_modules
     environment:
-      # Sometimes Docker/WSL need poll-watchers
+      # Docker/WSL needs poll-watchers for live code update
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
 
