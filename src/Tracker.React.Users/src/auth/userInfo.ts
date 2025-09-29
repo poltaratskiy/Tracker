@@ -11,7 +11,7 @@ function parseJwt<T = any>(token?: string): T | null {
   if (!token) return null;
   try {
     const base64Url = token.split(".")[1];
-    const binary  = atob(base64Url.replaceAll(/-/g, "+").replaceAll(/_/g, "/"));
+    const binary  = atob(base64Url.replaceAll("-", "+").replaceAll("_", "/"));
     
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
