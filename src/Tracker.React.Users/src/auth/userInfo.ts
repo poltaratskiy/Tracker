@@ -10,9 +10,16 @@ export type UserInfo = {
 function parseJwt<T = any>(token?: string): T | null {
   if (!token) return null;
   try {
-    const base64 = token.split(".")[1];
-    const json = atob(base64.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decodeURIComponent(escape(json)));
+    const base64Url = token.split(".")[1];
+    const binary  = atob(base64Url.replace(/-/g, "+").replace(/_/g, "/"));
+    
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    // UTF-8 -> string
+    const json = new TextDecoder("utf-8").decode(bytes);
+
+    return JSON.parse(json);
   } catch {
     return null;
   }
