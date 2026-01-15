@@ -27,4 +27,4 @@ I used the Clean Architecture + CQRS approach and layered architecture because i
 ## Assumptions
 This pet project makes certain assumptions and simplifications to keep the setup lightweight and runnable via Docker Compose. Some of them like storing secrets in docker-compose.yml was intentionally done to be possible to run on a local machine without complex set up, using http instead of https is also intentionally done not to have any issues with certificates on a local machine. It is required to store secrets in a special storage and they must not be in a code, and it is nessesary to use https for external connections.
 
-I left comments across the code to explain some assumptions and decisions.
+This project may have some overhead so I left comments across the code to explain some assumptions and decisions.
