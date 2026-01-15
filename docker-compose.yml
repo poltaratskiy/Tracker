@@ -9,6 +9,7 @@
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - FusionAuthApi__ApiKey=Ukr4iZWK7ZlMpk_PQ62FjMauASi0K9fT4qBEVsWgvOL9GNmL3fy7TaS1
     volumes:
       - ./logging:/var/log/myservices
 
