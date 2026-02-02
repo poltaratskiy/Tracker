@@ -10,7 +10,9 @@ namespace Tracker.Dotnet.Libs.KafkaProducer
         {
             var config = new ProducerConfig
             {
-                BootstrapServers = options.BootstrapServers
+                BootstrapServers = options.BootstrapServers,
+                Acks = Acks.All, // Setting "At least once" for guarantee delivery, consumer will deduplicate
+                EnableIdempotence = true
             };
 
             _producer = new ProducerBuilder<string, string>(config).Build();

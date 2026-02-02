@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Tracker.Dotnet.Libs.KafkaAbstractions;
-using Tracker.Dotnet.Libs.KafkaConsumer.Inbox;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Internal;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
