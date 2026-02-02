@@ -1,6 +1,10 @@
-﻿namespace Tracker.Dotnet.Libs.KafkaConsumer;
+﻿using Tracker.Dotnet.Libs.KafkaAbstractions;
 
-public class HandlerConsumerBuilder<TMessage, THandler>
+namespace Tracker.Dotnet.Libs.KafkaConsumer;
+
+public class HandlerConsumerBuilder<TMessage, THandler> 
+    where TMessage : IMessage 
+    where THandler : IHandler<TMessage>
 {
     private readonly KafkaConsumerOptions _options;
 
@@ -11,7 +15,7 @@ public class HandlerConsumerBuilder<TMessage, THandler>
 
     public KafkaConsumerBuilder Topic(string topic)
     {
-        _options.ConsumerTopicMap[topic] = (typeof(TMessage), typeof(THandler));
+        _options.ConsumerTopicMap[topic] = new MessageHandlerMap(typeof(TMessage), typeof(THandler));
         return new KafkaConsumerBuilder(_options);
     }
 }

@@ -5,6 +5,6 @@
     /// </summary>
     public interface IKafkaProducer
     {
-        public Task ProduceAsync(object message, CancellationToken cancellationToken = default);
+        public Task ProduceAsync(object message, string messageId, CancellationToken cancellationToken = default);
     }
 }

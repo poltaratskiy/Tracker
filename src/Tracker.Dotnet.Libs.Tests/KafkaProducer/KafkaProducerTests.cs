@@ -31,7 +31,7 @@ public class KafkaProducerTests
         _options.MessageTopicMap[typeof(TestMessage)] = "test-topic";
 
         // Act
-        await _kafkaProducer.ProduceAsync(testMessage);
+        await _kafkaProducer.ProduceAsync(testMessage, "messageId");
 
         // Assert
         _producerMock.Verify(p => p.ProduceAsync(
@@ -50,7 +50,7 @@ public class KafkaProducerTests
         _options.MessageTopicMap[typeof(TestMessage)] = "test-topic";
 
         // Act
-        await _kafkaProducer.ProduceAsync(testMessage);
+        await _kafkaProducer.ProduceAsync(testMessage, "messageId");
 
         // Assert
         _producerMock.Verify(p => p.ProduceAsync(
@@ -70,7 +70,7 @@ public class KafkaProducerTests
         // Act & Assert
         var ex = await Should.ThrowAsync<InvalidOperationException>(async () =>
         {
-            await _kafkaProducer.ProduceAsync(testMessage);
+            await _kafkaProducer.ProduceAsync(testMessage, "messageId");
         });
 
         ex.Message.ShouldContain(nameof(TestMessage));
