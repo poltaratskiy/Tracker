@@ -24,7 +24,7 @@ public class KafkaProducer : IKafkaProducer
         _producer = producer;
     }
 
-    public async Task ProduceAsync(object message, CancellationToken cancellationToken = default)
+    public async Task ProduceAsync(object message, string messageId, CancellationToken cancellationToken = default)
     {
         var type = message.GetType();
 
@@ -57,7 +57,8 @@ public class KafkaProducer : IKafkaProducer
         {
             msg.Headers = new Headers
             {
-                { "refid", Encoding.UTF8.GetBytes(refId!) }
+                { "refid", Encoding.UTF8.GetBytes(refId!) },
+                { "MessageId", Encoding.UTF8.GetBytes(messageId) },
             };
         }
 

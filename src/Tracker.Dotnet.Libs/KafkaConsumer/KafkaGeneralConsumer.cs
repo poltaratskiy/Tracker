@@ -6,6 +6,7 @@ using Polly.Timeout;
 using Serilog.Context;
 using System.Text;
 using System.Text.Json;
+using Tracker.Dotnet.Libs.KafkaProducer;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
@@ -13,21 +14,21 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
 {
     private readonly ILogger<KafkaGeneralConsumer> _logger;
     private readonly IConsumerWrapper _consumerWrapper;
+    private readonly IProducerWrapper _producerWrapper;
     private readonly IServiceProvider _serviceProvider;
     private readonly KafkaConsumerOptions _consumerOptions;
-    private readonly Dictionary<string, (Type, Type)> _topicMap;
-
-    // It is overhead but I want to demonstrate how it is possible to limit the load.
-    private readonly SemaphoreSlim _concurrencyLimiter = new(16); // maximum 16 messages are processed simultaneously. 
+    private readonly Dictionary<string, MessageHandlerMap> _topicMap;
 
     public KafkaGeneralConsumer(
         ILogger<KafkaGeneralConsumer> logger,
         IConsumerWrapper consumerWrapper,
+        IProducerWrapper producerWrapper,
         IServiceProvider serviceProvider,
         KafkaConsumerOptions consumerOptions)
     {
         _logger = logger;
         _consumerWrapper = consumerWrapper;
+        _producerWrapper = producerWrapper;
         _serviceProvider = serviceProvider;
         _consumerOptions = consumerOptions;
         _topicMap = _consumerOptions.ConsumerTopicMap;
@@ -35,11 +36,16 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
 
     public async Task StartConsumeAsync(CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(_consumerOptions.DeadLettersTopic))
+        {
+            _logger.LogWarning("Topic for dead letters messages is not pointed out, you won't be able to get original message in case of failure");
+        }
+
         var policy = Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(
-                retryCount: 3,
-                sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)),
+                retryCount: _consumerOptions.InstantRetries,
+                sleepDurationProvider: attempt => TimeSpan.FromMilliseconds(attempt == 1 ? 500 : 2000),
                 onRetry: (exception, delay, attempt, ctx) =>
                 {
                     _logger.LogWarning(exception,
@@ -59,74 +65,71 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                 var result = _consumerWrapper.Consume(cancellationToken);
                 var topic = result.Topic;
 
-                if (!_topicMap.TryGetValue(topic, out var tuple))
+                if (!_topicMap.TryGetValue(topic, out var topicHandlerMap))
                 {
                     _logger.LogError($"Topic is not registered: {topic}");
+                    _consumerWrapper.Commit(result);
                     continue;
                 }
 
-                var (messageType, handlerType) = tuple;
+                var messageType = topicHandlerMap.Message;
+                var handlerType = topicHandlerMap.Handler;
                 var messageJson = result.Message.Value;
-                var message = JsonSerializer.Deserialize(messageJson, messageType);
 
                 _logger.LogInformation("Received message to topic {topic}, type {type}", topic, messageType.Name);
 
                 using var scope = _serviceProvider.CreateScope();
                 var handler = scope.ServiceProvider.GetRequiredService(handlerType);
 
-                var method = handlerType.GetMethod("HandleAsync");
-                if (method == null)
-                {
-                    _logger.LogError($"Method HandleAsync not found at {handlerType.Name}");
-                    continue;
-                }
-
-                var correlationId = result.Message.Headers
+                var refId = result.Message.Headers
                     .FirstOrDefault(h => h.Key == "refid")?
                     .GetValueBytes();
 
-                await _concurrencyLimiter.WaitAsync(cancellationToken);
-
-                // Asynchronous processing in background
-                _ = Task.Run(async () =>
-                {
-                    var runTopic = topic;
-                    var messageTypeName = messageType.Name;
-                    var localHandler = handler;
-                    var localMessage = message;
-                    var localMethod = method;
-
-                    var correlationIdStr = correlationId != null
-                    ? Encoding.UTF8.GetString(correlationId)
+                var refIdStr = refId != null
+                    ? Encoding.UTF8.GetString(refId)
                     : string.Empty;
 
-                    // Assign end-to-end identifier
-                    using (LogContext.PushProperty("refid", correlationIdStr))
+                var messageId = result.Message.Headers
+                    .FirstOrDefault(h => h.Key == "MessageId")?
+                    .GetValueBytes();
+
+                string? messageIdStr = null;
+                if (messageId != null)
+                {
+                    messageIdStr = Encoding.UTF8.GetString(messageId);
+                }
+
+                using (LogContext.PushProperty("refid", refIdStr))
+                {
+                    try
                     {
-                        try
+                        var message = JsonSerializer.Deserialize(messageJson, messageType);
+
+                        await combinedPolicy.ExecuteAsync(async ct =>
                         {
-                            await combinedPolicy.ExecuteAsync(async ct =>
-                            {
-                                var task = (Task)localMethod.Invoke(localHandler, new[] { localMessage!, cancellationToken })!;
-                                await task; // task contains handler calling
-                                _consumerWrapper.Commit(result);
-                                _logger.LogInformation("Successfully finished processing of message type {type}", messageTypeName);
-                            }, cancellationToken);
-                        }
-                        catch (TimeoutRejectedException tex)
-                        {
-                            _logger.LogError(tex, "Timeout while processing message of type {type}", messageTypeName);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError($"Error occured while processing message from Kafka: {ex.Message}");
-                        }
-                        finally
-                        {
-                            _concurrencyLimiter.Release();
-                        }
+                            await ((dynamic)handler).HandleAsync((dynamic)message!, ct)!;
+                            _consumerWrapper.Commit(result);
+                            _logger.LogInformation("Successfully finished processing of message type {type}", messageType.Name);
+                        }, cancellationToken);
                     }
-                }, cancellationToken);
+                    catch (TimeoutRejectedException tex)
+                    {
+                        _logger.LogError(tex, "Timeout while processing message of type {type}", messageType.Name);
+                        await MoveToDeadLetterTopic(messageJson, refIdStr, messageIdStr, tex.Message, cancellationToken);
+                        _consumerWrapper.Commit(result);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        // Do not send to DLQ and do not commit message
+                        throw;
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        _logger.LogError(ex, "Error occured while processing message of type {type}", messageType.Name);
+                        await MoveToDeadLetterTopic(messageJson, refIdStr, messageIdStr, ex.Message, cancellationToken);
+                        _consumerWrapper.Commit(result);
+                    }
+                }
             }
             catch (OperationCanceledException)
             {
@@ -135,12 +138,51 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
             }
             catch (ConsumeException ex)
             {
-                _logger.LogError(ex, $"Kafka consume error: {ex.Error.Reason}");
+                _logger.LogError(ex, "Kafka consume error: {Reason}", ex.Error.Reason);
+
+                if (ex.Error.IsFatal)
+                {
+                    _logger.LogCritical("Fatal Kafka error, stopping consumer");
+                    break; // service stopping
+                }
+
+                // transient error - little pause
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"General error of Kafka consumer: {ex.Message}");
             }
         }
+    }
+
+    private async Task MoveToDeadLetterTopic(string serializedMessage, string? refId, string? messageId, string? reason, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(_consumerOptions.DeadLettersTopic))
+        {
+            return;
+        }
+
+        var key = Guid.NewGuid().ToString();
+
+        var msg = new Message<string, string>
+        {
+            Key = key,
+            Value = serializedMessage,
+        };
+
+        msg.Headers = new Headers();
+
+        if (refId != null)
+        {
+            msg.Headers.Add("refid", Encoding.UTF8.GetBytes(refId));
+        }
+
+        if (messageId != null)
+        {
+            msg.Headers.Add("MessageId", Encoding.UTF8.GetBytes(messageId));
+        }
+
+        await _producerWrapper.ProduceAsync(_consumerOptions.DeadLettersTopic, msg, cancellationToken);
     }
 }

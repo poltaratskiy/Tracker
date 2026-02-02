@@ -1,4 +1,6 @@
-﻿namespace Tracker.Dotnet.Libs.KafkaConsumer;
+﻿using Tracker.Dotnet.Libs.KafkaAbstractions;
+
+namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
 public class KafkaConsumerBuilder
 {
@@ -9,7 +11,7 @@ public class KafkaConsumerBuilder
         _options = options;
     }
 
-    public MessageConfigBuilder<T> ForMessage<T>()
+    public MessageConfigBuilder<T> ForMessage<T>() where T : IMessage
     {
         return new MessageConfigBuilder<T>(_options);
     }
@@ -23,6 +25,18 @@ public class KafkaConsumerBuilder
     public KafkaConsumerBuilder ConsumerGroup(string consumerGroup)
     {
         _options.ConsumerGroup = consumerGroup;
+        return this;
+    }
+
+    public KafkaConsumerBuilder InstantRetries(int retries)
+    {
+        _options.InstantRetries = retries;
+        return this;
+    }
+
+    public KafkaConsumerBuilder SetDeadLetterTopic(string topic)
+    {
+        _options.DeadLettersTopic = topic;
         return this;
     }
 }

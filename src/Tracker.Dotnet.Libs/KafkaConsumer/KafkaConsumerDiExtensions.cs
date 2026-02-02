@@ -1,4 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Tracker.Dotnet.Libs.KafkaAbstractions;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
@@ -30,19 +34,20 @@ public static class KafkaConsumerDiExtensions
 
         foreach (var consumer in options.ConsumerTopicMap)
         {
-            var interfaces = consumer.Value.HandlerType.GetInterfaces();
-            if (!interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKafkaConsumer<>)))
+            var interfaces = consumer.Value.Handler.GetInterfaces();
+            if (!interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandler<>)))
             {
-                throw new ApplicationException($"The type {consumer.Value.Item2.Name} does not realize interface IKafkaConsumer");
+                throw new ApplicationException($"The type {consumer.Value.Message.Name} does not realize interface IKafkaConsumer");
             }
 
-            services.AddScoped(consumer.Value.HandlerType);
+            services.AddScoped(consumer.Value.Handler);
         }
 
         services.AddSingleton<KafkaConsumerOptions>(options);
         services.AddSingleton<IConsumerWrapper, ConsumerWrapper>();
         services.AddSingleton<IKafkaGeneralConsumer, KafkaGeneralConsumer>();
         services.AddHostedService<KafkaConsumerBackgroundService>();
+        services.TryAddSingleton<IInbox, NoOpInbox>();
         return services;
     }
 }

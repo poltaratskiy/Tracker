@@ -5,16 +5,18 @@ using Moq;
 using Shouldly;
 using System.Text;
 using System.Text.Json;
+using Tracker.Dotnet.Libs.KafkaAbstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer;
+using Tracker.Dotnet.Libs.KafkaProducer;
 
 namespace Tracker.Dotnet.Libs.Tests.KafkaConsumer;
 
 [TestFixture]
 public class KafkaGeneralConsumerTests
 {
-    public class TestMessage { public string Value { get; set; } = "test"; }
+    public class TestMessage : IMessage { public string Value { get; set; } = "test"; }
 
-    public class TestHandler : IKafkaConsumer<TestMessage>
+    public class TestHandler : IHandler<TestMessage>
     {
         public bool WasCalled = false;
         public bool ShouldThrow = false;
@@ -38,7 +40,8 @@ public class KafkaGeneralConsumerTests
                .ForMessage<TestMessage>()
                .Handler<TestHandler>()
                .Topic("test-topic");
-            cfg.ConsumerGroup("test-group");
+            cfg.ConsumerGroup("test-group")
+                .InstantRetries(0);
         });
 
         var handler = new TestHandler();
@@ -51,11 +54,19 @@ public class KafkaGeneralConsumerTests
             Message = new Message<Ignore, string> { Value = serialized, Headers = headers }
         };
 
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(200);
+
         var consumerWrapperMock = new Mock<IConsumerWrapper>();
         consumerWrapperMock.Setup(c => c.Consume(It.IsAny<CancellationToken>())).Returns(consumeResult);
-        consumerWrapperMock.Setup(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>()));
+        consumerWrapperMock.Setup(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>())).Callback(cts.Cancel);
+
+        var producerWrapperMock = new Mock<IProducerWrapper>();
+        producerWrapperMock.Setup(c => c.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DeliveryResult<string, string>());
 
         services.AddSingleton<IConsumerWrapper>(consumerWrapperMock.Object);
+        services.AddSingleton<IProducerWrapper>(producerWrapperMock.Object);
         services.AddSingleton(handler);
         services.AddLogging();
 
@@ -64,12 +75,10 @@ public class KafkaGeneralConsumerTests
         var kafka = new KafkaGeneralConsumer(
             provider.GetRequiredService<ILogger<KafkaGeneralConsumer>>(),
             provider.GetRequiredService<IConsumerWrapper>(),
+            provider.GetRequiredService<IProducerWrapper>(),
             provider,
             provider.GetRequiredService<KafkaConsumerOptions>()
         );
-
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(200);
 
         await kafka.StartConsumeAsync(cts.Token);
 
@@ -81,13 +90,17 @@ public class KafkaGeneralConsumerTests
     {
         var services = new ServiceCollection();
 
+        
+
         services.AddKafkaConsumer(cfg =>
         {
             cfg.BootstrapServers("localhost:9092")
                .ForMessage<TestMessage>()
                .Handler<TestHandler>()
                .Topic("test-topic");
-            cfg.ConsumerGroup("test-group");
+            cfg.ConsumerGroup("test-group")
+                .InstantRetries(0)
+                .SetDeadLetterTopic("DLQ");
         });
 
         var handler = new TestHandler { ShouldThrow = true };
@@ -101,11 +114,17 @@ public class KafkaGeneralConsumerTests
         };
 
         var cts = new CancellationTokenSource();
-        cts.CancelAfter(200);
 
         var consumerWrapperMock = new Mock<IConsumerWrapper>();
         consumerWrapperMock.Setup(c => c.Consume(It.IsAny<CancellationToken>())).Returns(consumeResult);
         consumerWrapperMock.Setup(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>()));
+
+        var producerWrapperMock = new Mock<IProducerWrapper>();
+        producerWrapperMock.Setup(c => c.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DeliveryResult<string, string>())
+            .Callback(cts.Cancel);
+
+        services.AddSingleton<IProducerWrapper>(producerWrapperMock.Object);
 
         services.AddSingleton<IConsumerWrapper>(consumerWrapperMock.Object);
         services.AddSingleton(handler);
@@ -118,6 +137,7 @@ public class KafkaGeneralConsumerTests
         await Task.Delay(50);
 
         handler.WasCalled.ShouldBeTrue();
-        consumerWrapperMock.Verify(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>()), Times.Never);
+        consumerWrapperMock.Verify(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>()), Times.AtLeastOnce);
+        producerWrapperMock.Verify(c => c.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }
