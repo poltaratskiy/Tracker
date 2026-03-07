@@ -7,6 +7,7 @@ public class InboxMessage
 
     public DateTimeOffset FirstSeenAt { get; set; }
     public DateTimeOffset LockUntil { get; set; }
+    public Guid OwnerId { get; set; }
 
     public int Attempts { get; set; }
     public DateTimeOffset? ProcessedAt { get; set; }

@@ -4,6 +4,7 @@ public interface IInbox
 {
     public Task<InboxAcquireResult> TryAcquireAsync(
         string messageId,
+        Guid ownerId,
         CancellationToken cancellationToken = default);
 
     public Task MarkProcessedAsync(string messageId, CancellationToken cancellationToken = default);

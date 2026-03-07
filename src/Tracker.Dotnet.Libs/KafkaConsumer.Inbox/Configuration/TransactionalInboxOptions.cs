@@ -2,5 +2,5 @@
 
 public class TransactionalInboxOptions
 {
-    public TimeSpan PollingInterval { get; set; } = TimeSpan.FromSeconds(2);
+    public TimeSpan LockInterval { get; set; } = TimeSpan.FromSeconds(20);
 }

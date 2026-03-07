@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Tracker.Dotnet.Libs.KafkaAbstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Configuration;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Internal;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
@@ -16,7 +17,7 @@ public static class KafkaConsumerDiExtensions
     /// <param name="services"></param>
     /// <param name="configure"></param>
     /// <returns></returns>
-    public static IServiceCollection AddKafkaConsumer(this IServiceCollection services, Action<KafkaConsumerBuilder> configure)
+    public static IKafkaConsumerConfigurer AddKafkaConsumer(this IServiceCollection services, Action<KafkaConsumerBuilder> configure)
     {
         var options = new KafkaConsumerOptions();
         var builder = new KafkaConsumerBuilder(options);
@@ -48,6 +49,22 @@ public static class KafkaConsumerDiExtensions
         services.AddSingleton<IKafkaGeneralConsumer, KafkaGeneralConsumer>();
         services.AddHostedService<KafkaConsumerBackgroundService>();
         services.TryAddSingleton<IInbox, NoOpInbox>();
-        return services;
+        services.TryAddSingleton<TransactionalInboxOptions>();
+        return new KafkaConsumerConfigurer(services);
+    }
+}
+
+public interface IKafkaConsumerConfigurer
+{
+    IServiceCollection Services { get; }
+}
+
+public class KafkaConsumerConfigurer : IKafkaConsumerConfigurer
+{
+    public IServiceCollection Services { get; }
+
+    public KafkaConsumerConfigurer(IServiceCollection services)
+    {
+        Services = services;
     }
 }

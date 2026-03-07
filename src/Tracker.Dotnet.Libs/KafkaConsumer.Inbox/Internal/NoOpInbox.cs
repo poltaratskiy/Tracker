@@ -4,7 +4,7 @@ namespace Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Internal;
 
 public class NoOpInbox : IInbox
 {
-    public Task<InboxAcquireResult> TryAcquireAsync(string messageId, CancellationToken cancellationToken = default)
+    public Task<InboxAcquireResult> TryAcquireAsync(string messageId, Guid ownerId, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(InboxAcquireResult.Acquired);
     }

@@ -7,6 +7,9 @@ using System.Text;
 using System.Text.Json;
 using Tracker.Dotnet.Libs.KafkaAbstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Configuration;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Internal;
 using Tracker.Dotnet.Libs.KafkaProducer;
 
 namespace Tracker.Dotnet.Libs.Tests.KafkaConsumer;
@@ -46,7 +49,7 @@ public class KafkaGeneralConsumerTests
 
         var handler = new TestHandler();
         var serialized = JsonSerializer.Serialize(new TestMessage { Value = "FromKafka" });
-        var headers = new Headers { { "refid", Encoding.UTF8.GetBytes("abc-123") } };
+        var headers = new Headers { { "refid", Encoding.UTF8.GetBytes("abc-123") }, { "MessageId", Encoding.UTF8.GetBytes("123") } };
 
         var consumeResult = new ConsumeResult<Ignore, string>
         {
@@ -61,13 +64,19 @@ public class KafkaGeneralConsumerTests
         consumerWrapperMock.Setup(c => c.Consume(It.IsAny<CancellationToken>())).Returns(consumeResult);
         consumerWrapperMock.Setup(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>())).Callback(cts.Cancel);
 
+        var deliveryResult = new DeliveryResult<string, string>()
+        {
+            Message = new Message<string, string> { Headers = headers }
+        };
+
         var producerWrapperMock = new Mock<IProducerWrapper>();
         producerWrapperMock.Setup(c => c.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeliveryResult<string, string>());
+            .ReturnsAsync(deliveryResult);
 
         services.AddSingleton<IConsumerWrapper>(consumerWrapperMock.Object);
         services.AddSingleton<IProducerWrapper>(producerWrapperMock.Object);
         services.AddSingleton(handler);
+        services.AddSingleton<IInbox, NoOpInbox>();
         services.AddLogging();
 
         var provider = services.BuildServiceProvider();
@@ -77,6 +86,8 @@ public class KafkaGeneralConsumerTests
             provider.GetRequiredService<IConsumerWrapper>(),
             provider.GetRequiredService<IProducerWrapper>(),
             provider,
+            provider.GetRequiredService<IInbox>(),
+            provider.GetRequiredService<TransactionalInboxOptions>(),
             provider.GetRequiredService<KafkaConsumerOptions>()
         );
 
@@ -89,8 +100,6 @@ public class KafkaGeneralConsumerTests
     public async Task Should_Not_Commit_When_Handler_Throws()
     {
         var services = new ServiceCollection();
-
-        
 
         services.AddKafkaConsumer(cfg =>
         {
@@ -105,7 +114,7 @@ public class KafkaGeneralConsumerTests
 
         var handler = new TestHandler { ShouldThrow = true };
         var serialized = JsonSerializer.Serialize(new TestMessage { Value = "Boom" });
-        var headers = new Headers { { "refid", Encoding.UTF8.GetBytes("abc-123") } };
+        var headers = new Headers { { "refid", Encoding.UTF8.GetBytes("abc-123") }, { "MessageId", Encoding.UTF8.GetBytes("123") } };
 
         var consumeResult = new ConsumeResult<Ignore, string>
         {
@@ -119,9 +128,14 @@ public class KafkaGeneralConsumerTests
         consumerWrapperMock.Setup(c => c.Consume(It.IsAny<CancellationToken>())).Returns(consumeResult);
         consumerWrapperMock.Setup(c => c.Commit(It.IsAny<ConsumeResult<Ignore, string>>()));
 
+        var deliveryResult = new DeliveryResult<string, string>()
+        {
+            Message = new Message<string, string> { Headers = headers }
+        };
+
         var producerWrapperMock = new Mock<IProducerWrapper>();
         producerWrapperMock.Setup(c => c.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeliveryResult<string, string>())
+            .ReturnsAsync(deliveryResult)
             .Callback(cts.Cancel);
 
         services.AddSingleton<IProducerWrapper>(producerWrapperMock.Object);
