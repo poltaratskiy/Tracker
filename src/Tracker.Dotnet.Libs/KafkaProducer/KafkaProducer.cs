@@ -24,7 +24,7 @@ public class KafkaProducer : IKafkaProducer
         _producer = producer;
     }
 
-    public async Task ProduceAsync(object message, string messageId, CancellationToken cancellationToken = default)
+    public async Task ProduceAsync(object message, CancellationToken cancellationToken = default)
     {
         var type = message.GetType();
 
@@ -53,14 +53,11 @@ public class KafkaProducer : IKafkaProducer
             Value = payload,
         };
 
-        if (!string.IsNullOrEmpty(refId))
+        msg.Headers = new Headers
         {
-            msg.Headers = new Headers
-            {
-                { "refid", Encoding.UTF8.GetBytes(refId!) },
-                { "MessageId", Encoding.UTF8.GetBytes(messageId) },
-            };
-        }
+            { "MessageId", Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()) },
+            { "RefId", Encoding.UTF8.GetBytes(refId ?? string.Empty) },
+        };
 
         await _producer.ProduceAsync(topic, msg, cancellationToken);
     }

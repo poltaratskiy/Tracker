@@ -6,17 +6,25 @@ using Polly.Timeout;
 using Serilog.Context;
 using System.Text;
 using System.Text.Json;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Configuration;
 using Tracker.Dotnet.Libs.KafkaProducer;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
 public class KafkaGeneralConsumer : IKafkaGeneralConsumer
 {
+    // Instance Id is unique Id if there are a few instance deployed simultaneously
+    // and transactional inbox could allow to retry processing if MessageId has status "Locked" but disallow for other instances.
+    private static Guid InstanceId = Guid.NewGuid();
+
     private readonly ILogger<KafkaGeneralConsumer> _logger;
     private readonly IConsumerWrapper _consumerWrapper;
     private readonly IProducerWrapper _producerWrapper;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IInbox _inbox;
     private readonly KafkaConsumerOptions _consumerOptions;
+    private readonly TransactionalInboxOptions _transactionalInboxOptions;
     private readonly Dictionary<string, MessageHandlerMap> _topicMap;
 
     public KafkaGeneralConsumer(
@@ -24,6 +32,8 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
         IConsumerWrapper consumerWrapper,
         IProducerWrapper producerWrapper,
         IServiceProvider serviceProvider,
+        IInbox inbox,
+        TransactionalInboxOptions transactionalInboxOptions,
         KafkaConsumerOptions consumerOptions)
     {
         _logger = logger;
@@ -31,6 +41,8 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
         _producerWrapper = producerWrapper;
         _serviceProvider = serviceProvider;
         _consumerOptions = consumerOptions;
+        _inbox = inbox;
+        _transactionalInboxOptions = transactionalInboxOptions;
         _topicMap = _consumerOptions.ConsumerTopicMap;
     }
 
@@ -54,7 +66,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                 });
 
         var timeoutPolicy = Policy
-            .TimeoutAsync(TimeSpan.FromSeconds(30), Polly.Timeout.TimeoutStrategy.Pessimistic);
+            .TimeoutAsync(TimeSpan.FromSeconds(30), TimeoutStrategy.Pessimistic);
 
         var combinedPolicy = Policy.WrapAsync(policy, timeoutPolicy);
 
@@ -76,28 +88,36 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                 var handlerType = topicHandlerMap.Handler;
                 var messageJson = result.Message.Value;
 
-                _logger.LogInformation("Received message to topic {topic}, type {type}", topic, messageType.Name);
+                var messageId = result.Message.Headers
+                    .First(h => h.Key == "MessageId")
+                    .GetValueBytes();
+
+                var messageIdStr = Encoding.UTF8.GetString(messageId);
+                _logger.LogInformation("Received message to topic {Topic}, type {Type}, message Id {MessageId}", topic, messageType.Name, messageIdStr);
+                
+                var inboxAcquireResult = await _inbox.TryAcquireAsync(messageIdStr, InstanceId, cancellationToken);
+                if (inboxAcquireResult == InboxAcquireResult.Locked)
+                {
+                    _logger.LogWarning("Received duplicated message {MessageId} while someone is processing, awaiting...", messageIdStr);
+                    await Task.Delay(_transactionalInboxOptions.LockInterval);
+                }
+                else if (inboxAcquireResult == InboxAcquireResult.AlreadyProcessed)
+                {
+                    _logger.LogWarning("Received duplicated message {MessageId} while it has been already processed, commiting and moving forward", messageIdStr);
+                    _consumerWrapper.Commit(result);
+                }
 
                 using var scope = _serviceProvider.CreateScope();
                 var handler = scope.ServiceProvider.GetRequiredService(handlerType);
 
                 var refId = result.Message.Headers
-                    .FirstOrDefault(h => h.Key == "refid")?
+                    .FirstOrDefault(h => h.Key == "RefId")?
                     .GetValueBytes();
 
                 var refIdStr = refId != null
                     ? Encoding.UTF8.GetString(refId)
                     : string.Empty;
 
-                var messageId = result.Message.Headers
-                    .FirstOrDefault(h => h.Key == "MessageId")?
-                    .GetValueBytes();
-
-                string? messageIdStr = null;
-                if (messageId != null)
-                {
-                    messageIdStr = Encoding.UTF8.GetString(messageId);
-                }
 
                 using (LogContext.PushProperty("refid", refIdStr))
                 {
@@ -108,6 +128,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                         await combinedPolicy.ExecuteAsync(async ct =>
                         {
                             await ((dynamic)handler).HandleAsync((dynamic)message!, ct)!;
+                            await _inbox.MarkProcessedAsync(messageIdStr, cancellationToken);
                             _consumerWrapper.Commit(result);
                             _logger.LogInformation("Successfully finished processing of message type {type}", messageType.Name);
                         }, cancellationToken);
@@ -116,6 +137,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                     {
                         _logger.LogError(tex, "Timeout while processing message of type {type}", messageType.Name);
                         await MoveToDeadLetterTopic(messageJson, refIdStr, messageIdStr, tex.Message, cancellationToken);
+                        await _inbox.MarkFailedAsync(messageIdStr, tex, cancellationToken);
                         _consumerWrapper.Commit(result);
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -127,6 +149,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                     {
                         _logger.LogError(ex, "Error occured while processing message of type {type}", messageType.Name);
                         await MoveToDeadLetterTopic(messageJson, refIdStr, messageIdStr, ex.Message, cancellationToken);
+                        await _inbox.MarkFailedAsync(messageIdStr, ex, cancellationToken);
                         _consumerWrapper.Commit(result);
                     }
                 }
@@ -147,7 +170,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                 }
 
                 // transient error - little pause
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                await Task.Delay(_transactionalInboxOptions.LockInterval, cancellationToken);
             }
             catch (Exception ex)
             {

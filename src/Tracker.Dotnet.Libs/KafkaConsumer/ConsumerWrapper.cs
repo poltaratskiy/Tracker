@@ -17,7 +17,7 @@ public class ConsumerWrapper : IConsumerWrapper, IDisposable
         var consumerConfig = new ConsumerConfig
         {
             BootstrapServers = _consumerOptions.BootstrapServers,
-            GroupId = _consumerOptions.ConsumerGroup,     // consumer group name (important for balancing
+            GroupId = _consumerOptions.ConsumerGroup,     // consumer group name (important for balancing)
             AutoOffsetReset = AutoOffsetReset.Earliest, // read from the beginning if offset not found
             EnableAutoCommit = false,                 // control offset manually
             AllowAutoCreateTopics = false,            // specify topics
