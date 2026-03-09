@@ -1,26 +1,25 @@
 ﻿using Confluent.Kafka;
 
-namespace Tracker.Dotnet.Libs.KafkaProducer
+namespace Tracker.Dotnet.Libs.KafkaProducer;
+
+public class ProducerWrapper : IProducerWrapper
 {
-    public class ProducerWrapper : IProducerWrapper
+    private readonly IProducer<string, string> _producer;
+
+    public ProducerWrapper(KafkaProducerOptions options)
     {
-        private readonly IProducer<string, string> _producer;
-
-        public ProducerWrapper(KafkaProducerOptions options)
+        var config = new ProducerConfig
         {
-            var config = new ProducerConfig
-            {
-                BootstrapServers = options.BootstrapServers,
-                Acks = Acks.All, // Setting "At least once" for guarantee delivery, consumer will deduplicate
-                EnableIdempotence = true
-            };
+            BootstrapServers = options.BootstrapServers,
+            Acks = Acks.All, // Setting "At least once" for guarantee delivery, consumer will deduplicate
+            EnableIdempotence = true
+        };
 
-            _producer = new ProducerBuilder<string, string>(config).Build();
-        }
+        _producer = new ProducerBuilder<string, string>(config).Build();
+    }
 
-        public Task<DeliveryResult<string, string>> ProduceAsync(string topic, Message<string, string> message, CancellationToken cancellationToken)
-        {
-            return _producer.ProduceAsync(topic, message, cancellationToken);
-        }
+    public Task<DeliveryResult<string, string>> ProduceAsync(string topic, Message<string, string> message, CancellationToken cancellationToken)
+    {
+        return _producer.ProduceAsync(topic, message, cancellationToken);
     }
 }
