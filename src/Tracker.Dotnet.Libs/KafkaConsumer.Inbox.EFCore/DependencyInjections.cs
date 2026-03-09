@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore.Configuration;
 
