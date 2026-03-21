@@ -109,6 +109,9 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
 
                 using var scope = _serviceProvider.CreateScope();
                 var handler = scope.ServiceProvider.GetRequiredService(handlerType);
+                var contextAccessor = scope.ServiceProvider.GetRequiredService<IContextAccessor>();
+                contextAccessor.InstanceId = InstanceId;
+                contextAccessor.MessageId = messageIdStr;
 
                 var refId = result.Message.Headers
                     .FirstOrDefault(h => h.Key == "RefId")?

@@ -1,39 +1,36 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Tracker.Dotnet.Libs.KafkaConsumer;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
 using Tracker.Dotnet.Libs.KafkaProducer;
 using Tracker.Dotnet.Libs.LoadTests.Configuration;
+using Tracker.Dotnet.Libs.LoadTests.ConsumerTestHandler;
 using Tracker.Dotnet.Libs.LoadTests.Persistence;
 
 namespace Tracker.Dotnet.Libs.LoadTests.Infrastructure;
 
 public class GenericServiceProvider
 {
-    public ServiceProvider GetServiceCollection(SpConfiguration configuration)
+    public ServiceProvider GetConsumerServiceCollection(SpConfiguration configuration)
     {
         var services = new ServiceCollection();
 
-        var loggerConfig = new LoggerConfiguration()
-           .MinimumLevel.Information()
-           .WriteTo.NUnitOutput()
-           .CreateLogger();
-
-        services.AddLogging(builder =>
-        {
-            builder.ClearProviders();
-            builder.AddSerilog(loggerConfig);
-        });
+        AddLogging(services);
+        AddDbContext(services);
 
         if (configuration.UseTransationalInbox)
         {
             var inboxDbConfig = new Action<IServiceProvider, DbContextOptionsBuilder>((sp, db) => 
-                db.UseNpgsql(ConfigConstants.GetConnectionString(), 
-                x => x.MigrationsAssembly(typeof(InboxDbContextFactory).Assembly.FullName)));
+                db.UseNpgsql(ConfigConstants.GetConnectionString()));
 
-            services.AddKafkaConsumer(c => c.BootstrapServers(ConfigConstants.KafkaBootstrapServer).ConsumerGroup(ConfigConstants.KafkaConsumerGroup))
+            services.AddKafkaConsumer(c => 
+                c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
+                .ConsumerGroup(ConfigConstants.KafkaConsumerGroup)
+                .ForMessage<KafkaTestMessage>().Handler<KafkaTestHandler>().Topic(ConfigConstants.KafkaTopic)
+            )
                 .AddTransactionalInbox(cfg =>
                 {
                     cfg.Schema = ConfigConstants.PostgresInboxSchema;
@@ -45,14 +42,57 @@ public class GenericServiceProvider
         {
             services.AddKafkaConsumer(c => 
                 c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
-                .ConsumerGroup(ConfigConstants.KafkaConsumerGroup));
+                .ConsumerGroup(ConfigConstants.KafkaConsumerGroup)
+                .ForMessage<KafkaTestMessage>().Handler<KafkaTestHandler>().Topic(ConfigConstants.KafkaTopic));
         }
+
+        services.AddSingleton<ProcessingCompletitionTracker>();
+        return services.BuildServiceProvider();
+    }
+
+    public ServiceProvider GetProducerServiceCollection(SpConfiguration configuration)
+    {
+        var services = new ServiceCollection();
+        AddLogging(services);
+        AddDbContext(services);
 
         services.AddKafkaProducer(c =>
         {
-            c.BootstrapServers(ConfigConstants.KafkaBootstrapServer);
+            c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
+            .Acks(configuration.KafkaAcks)
+            .Idempotency(configuration.KafkaIdempotency)
+            .ForMessage<KafkaTestMessage>().Topic(ConfigConstants.KafkaTopic);
         });
 
         return services.BuildServiceProvider();
+    }
+
+    public ServiceProvider GetDbServiceCollection()
+    {
+        var services = new ServiceCollection();
+        AddDbContext(services);
+        return services.BuildServiceProvider();
+    }
+
+    private void AddLogging(ServiceCollection services)
+    {
+        var loggerConfig = new LoggerConfiguration()
+           .MinimumLevel.Information()
+           .WriteTo.NUnitOutput()
+           .CreateLogger();
+
+        services.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddSerilog(loggerConfig);
+        });
+    }
+
+    private void AddDbContext(ServiceCollection services)
+    {
+        services.AddDbContext<TestDbContext>((db) =>
+        {
+            db.UseNpgsql(ConfigConstants.GetConnectionString());
+        });
     }
 }

@@ -24,6 +24,7 @@ public static class KafkaProducerDiExtensions
 
         services.AddSingleton(options);
         services.AddSingleton<IKafkaProducer, KafkaProducer>();
+        services.AddSingleton<IProducerWrapper, ProducerWrapper>();
         return services;
     }
 }

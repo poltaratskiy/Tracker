@@ -47,6 +47,7 @@ public static class KafkaConsumerDiExtensions
         services.AddSingleton<KafkaConsumerOptions>(options);
         services.AddSingleton<IConsumerWrapper, ConsumerWrapper>();
         services.AddSingleton<IKafkaGeneralConsumer, KafkaGeneralConsumer>();
+        services.AddScoped<IContextAccessor, ContextAccessor>();
         services.AddHostedService<KafkaConsumerBackgroundService>();
         services.TryAddSingleton<IInbox, NoOpInbox>();
         services.TryAddSingleton<TransactionalInboxOptions>();

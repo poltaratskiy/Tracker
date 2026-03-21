@@ -4,19 +4,19 @@ using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Entities;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
 
-public class InboxDbContext : DbContext
+public abstract class InboxDbContextBase : DbContext
 {
     private readonly EfCoreInboxOptions _options;
 
-    public InboxDbContext(
-        DbContextOptions<InboxDbContext> dbContextOptions,
+    public InboxDbContextBase(
+        DbContextOptions dbContextOptions,
         EfCoreInboxOptions options)
         : base(dbContextOptions)
     {
         _options = options;
     }
 
-    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
+    public DbSet<InboxMessage> InboxMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -5,12 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
+using Tracker.Dotnet.Libs.LoadTests.Persistence;
 
 #nullable disable
 
 namespace Tracker.Dotnet.Libs.LoadTests.Migrations
 {
-    [DbContext(typeof(InboxDbContext))]
+    [DbContext(typeof(TestDbContext))]
     partial class InboxDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

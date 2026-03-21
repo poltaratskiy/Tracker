@@ -18,4 +18,5 @@ internal static class ConfigConstants
 
     internal static string KafkaBootstrapServer = "localhost:9092";
     internal static string KafkaConsumerGroup = "test-group";
+    internal static string KafkaTopic = "test-topic";
 }

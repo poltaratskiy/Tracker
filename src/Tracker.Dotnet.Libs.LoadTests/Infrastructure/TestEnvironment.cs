@@ -36,7 +36,7 @@ public class TestEnvironment : IAsyncDisposable
         {
             new TopicSpecification
             {
-                Name = "test-topic",
+                Name = ConfigConstants.KafkaTopic,
                 NumPartitions = 6,
                 ReplicationFactor = 1
             }

@@ -17,10 +17,6 @@ public static class DependencyInjections
             throw new InvalidOperationException("ConfigureDbContext must be configured for Transactional Inbox.");
 
         services.AddSingleton(options);
-        services.AddDbContext<InboxDbContext>((sp, db) =>
-        {
-            options.ConfigureDbContext(sp, db);
-        });
 
         services.AddScoped<IInbox, EfCoreInbox>();
 

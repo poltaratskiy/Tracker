@@ -11,8 +11,8 @@ public class ProducerWrapper : IProducerWrapper
         var config = new ProducerConfig
         {
             BootstrapServers = options.BootstrapServers,
-            Acks = Acks.All, // Setting "At least once" for guarantee delivery, consumer will deduplicate
-            EnableIdempotence = true
+            Acks = GetAcks(options.Acks), // Acks.All is "At least once" for guarantee delivery, consumer must deduplicate
+            EnableIdempotence = options.Idempotency
         };
 
         _producer = new ProducerBuilder<string, string>(config).Build();
@@ -22,4 +22,13 @@ public class ProducerWrapper : IProducerWrapper
     {
         return _producer.ProduceAsync(topic, message, cancellationToken);
     }
+
+    private static Acks GetAcks(KafkaAcks kafkaAcks) =>
+        kafkaAcks switch
+        {
+            KafkaAcks.None => Acks.None,
+            KafkaAcks.Leader => Acks.Leader,
+            KafkaAcks.All => Acks.All,
+            _ => throw new InvalidOperationException($"Invalid KafkaAcks value: {kafkaAcks}")
+        };
 }
