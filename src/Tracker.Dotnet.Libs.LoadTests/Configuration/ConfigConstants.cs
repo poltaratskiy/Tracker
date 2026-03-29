@@ -16,7 +16,7 @@ internal static class ConfigConstants
     internal static string GetConnectionString() =>
         $"Host={PostgresHost};Port={PostgresPort};Database={PostgresDbName};Username={PostgresUserName};Password={PostgresPassword}";
 
-    internal static string KafkaBootstrapServer = "localhost:9092";
+    internal static string KafkaBootstrapServer = "localhost:19092,localhost:29092,localhost:39092";
     internal static string KafkaConsumerGroup = "test-group";
     internal static string KafkaTopic = "test-topic";
 }

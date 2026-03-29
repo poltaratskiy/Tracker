@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Tracker.Dotnet.Libs.LoadTests.Migrations
 {
     /// <inheritdoc />
-    public partial class InboxInit : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,6 +32,22 @@ namespace Tracker.Dotnet.Libs.LoadTests.Migrations
                 {
                     table.PrimaryKey("PK_Inbox", x => x.MessageId);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "ProcessedMessages",
+                columns: table => new
+                {
+                    MessageId = table.Column<string>(type: "text", nullable: false),
+                    InstanceId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: false),
+                    DateStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Duration = table.Column<TimeSpan>(type: "interval", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProcessedMessages", x => x.MessageId);
+                });
         }
 
         /// <inheritdoc />
@@ -40,6 +56,9 @@ namespace Tracker.Dotnet.Libs.LoadTests.Migrations
             migrationBuilder.DropTable(
                 name: "Inbox",
                 schema: "public");
+
+            migrationBuilder.DropTable(
+                name: "ProcessedMessages");
         }
     }
 }

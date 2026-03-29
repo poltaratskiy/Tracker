@@ -9,12 +9,12 @@ public class KafkaProducer : IKafkaProducer
 {
     private readonly IProducerWrapper _producer;
     private readonly KafkaProducerOptions _options;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    //private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public KafkaProducer(KafkaProducerOptions options, IProducerWrapper producer, IHttpContextAccessor httpContextAccessor)
+    public KafkaProducer(KafkaProducerOptions options, IProducerWrapper producer/*, IHttpContextAccessor httpContextAccessor*/)
     {
         _options = options;
-        _httpContextAccessor = httpContextAccessor;
+        //_httpContextAccessor = httpContextAccessor;
 
         var config = new ProducerConfig
         {
@@ -41,11 +41,11 @@ public class KafkaProducer : IKafkaProducer
         var key = Guid.NewGuid().ToString();
 
         string? refId = null;
-        var context = _httpContextAccessor.HttpContext;
+        /*var context = _httpContextAccessor.HttpContext;
         if (context?.Items != null && context.Items.TryGetValue("RefId", out var val))
         {
             refId = val as string;
-        }
+        }*/
 
         var msg = new Message<string, string> 
         { 

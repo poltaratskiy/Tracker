@@ -24,8 +24,7 @@ public class KafkaTestHandler : IHandler<KafkaTestMessage>
 
     public async Task HandleAsync(KafkaTestMessage message, CancellationToken cancellationToken = default)
     {
-        // Simulate asynchronous work
-        var start = DateTime.Now;
+        var start = DateTime.UtcNow;
 
         var messageInfo = new ProcessedMessageInfo
         {
@@ -36,12 +35,11 @@ public class KafkaTestHandler : IHandler<KafkaTestMessage>
         };
 
         _dbContext.ProcessedMessages.Add(messageInfo);
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var finish = DateTime.Now;
-
+        var finish = DateTime.UtcNow;
         messageInfo.DateEnd = finish;
-        messageInfo.Duration = start - finish;
+        messageInfo.Duration = finish - start;
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _processingCompletitionTracker.MarkProcessed();

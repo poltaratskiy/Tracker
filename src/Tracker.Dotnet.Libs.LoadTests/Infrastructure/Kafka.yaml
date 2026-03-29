@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  redpanda-1:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.10
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --node-id=1
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://localhost:19092
+      - --rpc-addr=redpanda-1:33145
+      - --advertise-rpc-addr=redpanda-1:33145 # without seed (bootstrap node)
+    ports:
+      - "19092:9092"
+
+  redpanda-2:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.10
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --node-id=2
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://localhost:29092
+      - --rpc-addr=redpanda-2:33145
+      - --advertise-rpc-addr=redpanda-2:33145
+      - --seeds=redpanda-1:33145 # point out first like a main
+    ports:
+      - "29092:9092"
+
+  redpanda-3:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.10
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --node-id=3
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://localhost:39092
+      - --rpc-addr=redpanda-3:33145
+      - --advertise-rpc-addr=redpanda-3:33145 
+      - --seeds=redpanda-1:33145 # point out first like a main
+    ports:
+      - "39092:9092"

@@ -1,7 +1,10 @@
-﻿namespace Tracker.Dotnet.Libs.LoadTests.Persistence.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Tracker.Dotnet.Libs.LoadTests.Persistence.Entities;
 
 public class ProcessedMessageInfo
 {
+    [Key]
     public required string MessageId { get; set; }
     public Guid InstanceId { get; set; }
     public required string Content { get; set; }

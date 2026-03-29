@@ -2,7 +2,7 @@
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
-public class ConsumerWrapper : IConsumerWrapper, IDisposable
+public class ConsumerWrapper : IConsumerWrapper
 {
     private readonly KafkaConsumerOptions _consumerOptions;
     private IConsumer<Ignore, string>? _consumer;
@@ -41,7 +41,6 @@ public class ConsumerWrapper : IConsumerWrapper, IDisposable
 
     public void Dispose()
     {
-        _consumer?.Close();
         _consumer?.Dispose();
     }
 }

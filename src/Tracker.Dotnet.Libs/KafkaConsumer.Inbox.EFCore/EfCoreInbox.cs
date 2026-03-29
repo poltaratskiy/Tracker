@@ -9,10 +9,10 @@ namespace Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
 public class EfCoreInbox : IInbox
 {
     private readonly ILogger<EfCoreInbox> _logger;
-    private readonly InboxDbContext _dbContext;
+    private readonly InboxDbContextBase _dbContext;
     private readonly TransactionalInboxOptions _transactionalInboxOptions;
 
-    public EfCoreInbox(ILogger<EfCoreInbox> logger, InboxDbContext dbContext, TransactionalInboxOptions transactionalInboxOptions)
+    public EfCoreInbox(ILogger<EfCoreInbox> logger, InboxDbContextBase dbContext, TransactionalInboxOptions transactionalInboxOptions)
     {
         _logger = logger;
         _dbContext = dbContext;

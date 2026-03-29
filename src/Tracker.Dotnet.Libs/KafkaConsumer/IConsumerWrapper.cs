@@ -5,7 +5,7 @@ namespace Tracker.Dotnet.Libs.KafkaConsumer;
 /// <summary>
 /// Wrapper for Kafka IConsumer to be possible to cover with unit tests
 /// </summary>
-public interface IConsumerWrapper
+public interface IConsumerWrapper : IDisposable
 {
     public void Subscribe();
 

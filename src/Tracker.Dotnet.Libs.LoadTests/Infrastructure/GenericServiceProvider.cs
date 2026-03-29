@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Serilog;
 using Tracker.Dotnet.Libs.KafkaConsumer;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
+using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore.Configuration;
 using Tracker.Dotnet.Libs.KafkaProducer;
 using Tracker.Dotnet.Libs.LoadTests.Configuration;
 using Tracker.Dotnet.Libs.LoadTests.ConsumerTestHandler;
@@ -14,11 +14,11 @@ namespace Tracker.Dotnet.Libs.LoadTests.Infrastructure;
 
 public class GenericServiceProvider
 {
-    public ServiceProvider GetConsumerServiceCollection(SpConfiguration configuration)
+    public ServiceProvider GetConsumerServiceCollection(SpConfiguration configuration, ProcessingCompletitionTracker pct)
     {
         var services = new ServiceCollection();
 
-        AddLogging(services);
+        AddErrorOnlyLogging(services);
         AddDbContext(services);
 
         if (configuration.UseTransationalInbox)
@@ -46,14 +46,23 @@ public class GenericServiceProvider
                 .ForMessage<KafkaTestMessage>().Handler<KafkaTestHandler>().Topic(ConfigConstants.KafkaTopic));
         }
 
-        services.AddSingleton<ProcessingCompletitionTracker>();
+        var producerOptions = new KafkaProducerOptions
+        {
+            Acks = configuration.KafkaAcks,
+            BootstrapServers = ConfigConstants.KafkaBootstrapServer,
+            Idempotency = configuration.KafkaIdempotency
+        };
+
+        services.AddSingleton(producerOptions);
+
+        services.AddSingleton(pct);
         return services.BuildServiceProvider();
     }
 
     public ServiceProvider GetProducerServiceCollection(SpConfiguration configuration)
     {
         var services = new ServiceCollection();
-        AddLogging(services);
+        AddErrorOnlyLogging(services);
         AddDbContext(services);
 
         services.AddKafkaProducer(c =>
@@ -71,6 +80,7 @@ public class GenericServiceProvider
     {
         var services = new ServiceCollection();
         AddDbContext(services);
+        AddErrorOnlyLogging(services);
         return services.BuildServiceProvider();
     }
 
@@ -88,11 +98,34 @@ public class GenericServiceProvider
         });
     }
 
+    private void AddErrorOnlyLogging(ServiceCollection services)
+    {
+        var loggerConfig = new LoggerConfiguration()
+           .MinimumLevel.Error()
+           .WriteTo.NUnitOutput()
+           .CreateLogger();
+
+        services.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddSerilog(loggerConfig);
+        });
+    }
+
     private void AddDbContext(ServiceCollection services)
     {
         services.AddDbContext<TestDbContext>((db) =>
         {
             db.UseNpgsql(ConfigConstants.GetConnectionString());
         });
+
+        var options = new EfCoreInboxOptions
+        {
+            Schema = ConfigConstants.PostgresInboxSchema,
+            TableName = ConfigConstants.PostgresInboxTable,
+            ConfigureDbContext = (sp, db) => db.UseNpgsql(ConfigConstants.GetConnectionString())
+        };
+
+        services.AddSingleton(options);
     }
 }
