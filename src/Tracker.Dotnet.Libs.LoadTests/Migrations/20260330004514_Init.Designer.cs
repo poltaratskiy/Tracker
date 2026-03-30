@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
+using Tracker.Dotnet.Libs.LoadTests.Persistence;
 
 #nullable disable
 
 namespace Tracker.Dotnet.Libs.LoadTests.Migrations
 {
-    [DbContext(typeof(InboxDbContext))]
-    [Migration("20260309014239_InboxInit")]
-    partial class InboxInit
+    [DbContext(typeof(TestDbContext))]
+    [Migration("20260330004514_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,6 +55,55 @@ namespace Tracker.Dotnet.Libs.LoadTests.Migrations
                     b.HasKey("MessageId");
 
                     b.ToTable("Inbox", "public");
+                });
+
+            modelBuilder.Entity("Tracker.Dotnet.Libs.LoadTests.Persistence.Entities.LatencyTestMessageInfo", b =>
+                {
+                    b.Property<string>("MessageId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DateReceived")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateSent")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("interval");
+
+                    b.HasKey("MessageId");
+
+                    b.ToTable("LatencyTestMessages");
+                });
+
+            modelBuilder.Entity("Tracker.Dotnet.Libs.LoadTests.Persistence.Entities.ProcessedMessageInfo", b =>
+                {
+                    b.Property<string>("MessageId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DateEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("interval");
+
+                    b.Property<Guid>("InstanceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("MessageId");
+
+                    b.ToTable("ProcessedMessages");
                 });
 #pragma warning restore 612, 618
         }

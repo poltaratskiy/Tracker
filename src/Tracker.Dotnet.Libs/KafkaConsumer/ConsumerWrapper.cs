@@ -2,7 +2,7 @@
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
-public class ConsumerWrapper : IConsumerWrapper, IDisposable
+public class ConsumerWrapper : IConsumerWrapper
 {
     private readonly KafkaConsumerOptions _consumerOptions;
     private IConsumer<Ignore, string>? _consumer;
@@ -21,6 +21,7 @@ public class ConsumerWrapper : IConsumerWrapper, IDisposable
             AutoOffsetReset = AutoOffsetReset.Earliest, // read from the beginning if offset not found
             EnableAutoCommit = false,                 // control offset manually
             AllowAutoCreateTopics = false,            // specify topics
+            MaxPollIntervalMs = 900000
         };
 
         var topics = _consumerOptions.ConsumerTopicMap.Keys.ToArray();
@@ -41,7 +42,6 @@ public class ConsumerWrapper : IConsumerWrapper, IDisposable
 
     public void Dispose()
     {
-        _consumer?.Close();
         _consumer?.Dispose();
     }
 }

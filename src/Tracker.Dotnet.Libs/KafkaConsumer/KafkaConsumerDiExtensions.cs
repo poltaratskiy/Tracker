@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Tracker.Dotnet.Libs.KafkaAbstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Configuration;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Internal;
+using Tracker.Dotnet.Libs.KafkaProducer;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
@@ -44,9 +46,20 @@ public static class KafkaConsumerDiExtensions
             services.AddScoped(consumer.Value.Handler);
         }
 
+        var kafkaProducerOptionsDlq = new KafkaProducerOptions
+        {
+            Acks = KafkaAcks.Leader,
+            BootstrapServers = options.BootstrapServers,
+            Idempotency = false,
+        };
+
+        services.TryAddSingleton(kafkaProducerOptionsDlq);
+
         services.AddSingleton<KafkaConsumerOptions>(options);
         services.AddSingleton<IConsumerWrapper, ConsumerWrapper>();
+        services.AddSingleton<IProducerWrapper, ProducerWrapper>();
         services.AddSingleton<IKafkaGeneralConsumer, KafkaGeneralConsumer>();
+        services.AddScoped<IContextAccessor, ContextAccessor>();
         services.AddHostedService<KafkaConsumerBackgroundService>();
         services.TryAddSingleton<IInbox, NoOpInbox>();
         services.TryAddSingleton<TransactionalInboxOptions>();

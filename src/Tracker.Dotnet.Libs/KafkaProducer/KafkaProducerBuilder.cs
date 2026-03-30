@@ -19,4 +19,16 @@ public class KafkaProducerBuilder
         _options.BootstrapServers = servers;
         return this;
     }
+
+    public KafkaProducerBuilder Acks(KafkaAcks acks)
+    {
+        _options.Acks = acks;
+        return this;
+    }
+
+    public KafkaProducerBuilder Idempotency(bool idempotency)
+    {
+        _options.Idempotency = idempotency;
+        return this;
+    }
 }

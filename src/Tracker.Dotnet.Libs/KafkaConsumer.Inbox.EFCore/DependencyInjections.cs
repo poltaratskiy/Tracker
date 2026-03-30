@@ -6,7 +6,8 @@ namespace Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
 
 public static class DependencyInjections
 {
-    public static IServiceCollection AddTransactionalInbox(this IKafkaConsumerConfigurer consumerConfigurer, Action<EfCoreInboxOptions> configure)
+    public static IServiceCollection AddTransactionalInbox<TDbContext>(this IKafkaConsumerConfigurer consumerConfigurer, Action<EfCoreInboxOptions> configure)
+        where TDbContext : InboxDbContextBase
     {
         var services = consumerConfigurer.Services;
 
@@ -17,12 +18,8 @@ public static class DependencyInjections
             throw new InvalidOperationException("ConfigureDbContext must be configured for Transactional Inbox.");
 
         services.AddSingleton(options);
-        services.AddDbContext<InboxDbContext>((sp, db) =>
-        {
-            options.ConfigureDbContext(sp, db);
-        });
 
-        services.AddScoped<IInbox, EfCoreInbox>();
+        services.AddScoped<IInbox, EfCoreInbox<TDbContext>>();
 
         return services;
     }
