@@ -54,6 +54,29 @@ namespace Tracker.Dotnet.Libs.LoadTests.Migrations
                     b.ToTable("Inbox", "public");
                 });
 
+            modelBuilder.Entity("Tracker.Dotnet.Libs.LoadTests.Persistence.Entities.LatencyTestMessageInfo", b =>
+                {
+                    b.Property<string>("MessageId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DateReceived")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateSent")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("interval");
+
+                    b.HasKey("MessageId");
+
+                    b.ToTable("LatencyTestMessages");
+                });
+
             modelBuilder.Entity("Tracker.Dotnet.Libs.LoadTests.Persistence.Entities.ProcessedMessageInfo", b =>
                 {
                     b.Property<string>("MessageId")

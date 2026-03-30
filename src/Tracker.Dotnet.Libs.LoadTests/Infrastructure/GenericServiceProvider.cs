@@ -7,7 +7,8 @@ using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore.Configuration;
 using Tracker.Dotnet.Libs.KafkaProducer;
 using Tracker.Dotnet.Libs.LoadTests.Configuration;
-using Tracker.Dotnet.Libs.LoadTests.ConsumerTestHandler;
+using Tracker.Dotnet.Libs.LoadTests.ConsumerLatencyTestHandler;
+using Tracker.Dotnet.Libs.LoadTests.ConsumerThroughputTestHandler;
 using Tracker.Dotnet.Libs.LoadTests.Persistence;
 
 namespace Tracker.Dotnet.Libs.LoadTests.Infrastructure;
@@ -29,9 +30,10 @@ public class GenericServiceProvider
             services.AddKafkaConsumer(c => 
                 c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
                 .ConsumerGroup(ConfigConstants.KafkaConsumerGroup)
-                .ForMessage<KafkaTestMessage>().Handler<KafkaTestHandler>().Topic(ConfigConstants.KafkaTopic)
-            )
-                .AddTransactionalInbox(cfg =>
+                .ForMessage<ThroughputTestMessage>().Handler<ThroughputTestHandler>().Topic(ConfigConstants.KafkaTopic)
+                .ForMessage<LatencyTestMessage>().Handler<LatencyTestHandler>().Topic(ConfigConstants.KafkaLatencyTestTopic)
+                )
+                .AddTransactionalInbox<TestDbContext>(cfg =>
                 {
                     cfg.Schema = ConfigConstants.PostgresInboxSchema;
                     cfg.TableName = ConfigConstants.PostgresInboxTable;
@@ -43,7 +45,8 @@ public class GenericServiceProvider
             services.AddKafkaConsumer(c => 
                 c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
                 .ConsumerGroup(ConfigConstants.KafkaConsumerGroup)
-                .ForMessage<KafkaTestMessage>().Handler<KafkaTestHandler>().Topic(ConfigConstants.KafkaTopic));
+                .ForMessage<ThroughputTestMessage>().Handler<ThroughputTestHandler>().Topic(ConfigConstants.KafkaTopic)
+                .ForMessage<LatencyTestMessage>().Handler<LatencyTestHandler>().Topic(ConfigConstants.KafkaLatencyTestTopic));
         }
 
         var producerOptions = new KafkaProducerOptions
@@ -70,7 +73,8 @@ public class GenericServiceProvider
             c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
             .Acks(configuration.KafkaAcks)
             .Idempotency(configuration.KafkaIdempotency)
-            .ForMessage<KafkaTestMessage>().Topic(ConfigConstants.KafkaTopic);
+            .ForMessage<ThroughputTestMessage>().Topic(ConfigConstants.KafkaTopic)
+            .ForMessage<LatencyTestMessage>().Topic(ConfigConstants.KafkaLatencyTestTopic);
         });
 
         return services.BuildServiceProvider();

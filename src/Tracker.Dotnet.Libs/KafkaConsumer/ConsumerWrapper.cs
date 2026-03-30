@@ -21,6 +21,7 @@ public class ConsumerWrapper : IConsumerWrapper
             AutoOffsetReset = AutoOffsetReset.Earliest, // read from the beginning if offset not found
             EnableAutoCommit = false,                 // control offset manually
             AllowAutoCreateTopics = false,            // specify topics
+            MaxPollIntervalMs = 900000
         };
 
         var topics = _consumerOptions.ConsumerTopicMap.Keys.ToArray();

@@ -6,13 +6,14 @@ using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Entities;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer.Inbox.EFCore;
 
-public class EfCoreInbox : IInbox
+public class EfCoreInbox<TDbContext> : IInbox
+    where TDbContext : InboxDbContextBase
 {
-    private readonly ILogger<EfCoreInbox> _logger;
-    private readonly InboxDbContextBase _dbContext;
+    private readonly ILogger<EfCoreInbox<TDbContext>> _logger;
+    private readonly TDbContext _dbContext;
     private readonly TransactionalInboxOptions _transactionalInboxOptions;
 
-    public EfCoreInbox(ILogger<EfCoreInbox> logger, InboxDbContextBase dbContext, TransactionalInboxOptions transactionalInboxOptions)
+    public EfCoreInbox(ILogger<EfCoreInbox<TDbContext>> logger, TDbContext dbContext, TransactionalInboxOptions transactionalInboxOptions)
     {
         _logger = logger;
         _dbContext = dbContext;

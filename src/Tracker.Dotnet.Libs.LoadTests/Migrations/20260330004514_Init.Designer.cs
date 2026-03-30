@@ -12,7 +12,7 @@ using Tracker.Dotnet.Libs.LoadTests.Persistence;
 namespace Tracker.Dotnet.Libs.LoadTests.Migrations
 {
     [DbContext(typeof(TestDbContext))]
-    [Migration("20260327194936_Init")]
+    [Migration("20260330004514_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -55,6 +55,29 @@ namespace Tracker.Dotnet.Libs.LoadTests.Migrations
                     b.HasKey("MessageId");
 
                     b.ToTable("Inbox", "public");
+                });
+
+            modelBuilder.Entity("Tracker.Dotnet.Libs.LoadTests.Persistence.Entities.LatencyTestMessageInfo", b =>
+                {
+                    b.Property<string>("MessageId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DateReceived")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateSent")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("interval");
+
+                    b.HasKey("MessageId");
+
+                    b.ToTable("LatencyTestMessages");
                 });
 
             modelBuilder.Entity("Tracker.Dotnet.Libs.LoadTests.Persistence.Entities.ProcessedMessageInfo", b =>

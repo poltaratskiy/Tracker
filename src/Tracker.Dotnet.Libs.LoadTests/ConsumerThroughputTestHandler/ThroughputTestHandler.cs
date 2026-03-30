@@ -4,15 +4,15 @@ using Tracker.Dotnet.Libs.LoadTests.Infrastructure;
 using Tracker.Dotnet.Libs.LoadTests.Persistence;
 using Tracker.Dotnet.Libs.LoadTests.Persistence.Entities;
 
-namespace Tracker.Dotnet.Libs.LoadTests.ConsumerTestHandler;
+namespace Tracker.Dotnet.Libs.LoadTests.ConsumerThroughputTestHandler;
 
-public class KafkaTestHandler : IHandler<KafkaTestMessage>
+public class ThroughputTestHandler : IHandler<ThroughputTestMessage>
 {
     private readonly ProcessingCompletitionTracker _processingCompletitionTracker;
     private readonly IContextAccessor _contextAccessor;
     private readonly TestDbContext _dbContext;
 
-    public KafkaTestHandler(
+    public ThroughputTestHandler(
         ProcessingCompletitionTracker processingCompletitionTracker, 
         IContextAccessor contextAccessor,
         TestDbContext dbContext)
@@ -22,7 +22,7 @@ public class KafkaTestHandler : IHandler<KafkaTestMessage>
         _dbContext = dbContext;
     }
 
-    public async Task HandleAsync(KafkaTestMessage message, CancellationToken cancellationToken = default)
+    public async Task HandleAsync(ThroughputTestMessage message, CancellationToken cancellationToken = default)
     {
         var start = DateTime.UtcNow;
 

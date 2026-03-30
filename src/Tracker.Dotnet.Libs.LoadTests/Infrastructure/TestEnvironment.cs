@@ -48,6 +48,16 @@ public class TestEnvironment : IAsyncDisposable
                 ReplicationFactor = 3
             }
         });
+
+        await admin.CreateTopicsAsync(new[]
+        {
+            new TopicSpecification
+            {
+                Name = ConfigConstants.KafkaLatencyTestTopic,
+                NumPartitions = 6,
+                ReplicationFactor = 3
+            }
+        });
     }
 
     private async Task DeleteTopic()
@@ -59,7 +69,7 @@ public class TestEnvironment : IAsyncDisposable
 
         using var admin = new AdminClientBuilder(adminConfig).Build();
 
-        await admin.DeleteTopicsAsync(new[] { ConfigConstants.KafkaTopic });
+        await admin.DeleteTopicsAsync(new[] { ConfigConstants.KafkaTopic, ConfigConstants.KafkaLatencyTestTopic });
     }
 
     private async Task WaitForKafkaAsync(TimeSpan timeout)

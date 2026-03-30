@@ -13,7 +13,6 @@ public class ProducerWrapper : IProducerWrapper
             BootstrapServers = options.BootstrapServers,
             Acks = GetAcks(options.Acks), // Acks.All is "At least once" for guarantee delivery, consumer must deduplicate
             EnableIdempotence = options.Idempotency,
-            MessageTimeoutMs = 5000
         };
 
         _producer = new ProducerBuilder<string, string>(config).Build();

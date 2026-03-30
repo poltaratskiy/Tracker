@@ -11,9 +11,7 @@ public class TestDbContext : InboxDbContextBase
     {
     }
 
-    /*public TestDbContext(DbContextOptions<TestDbContext> dbContextOptions) : base(dbContextOptions, new EfCoreInboxOptions() { ConfigureDbContext = (sp, db) => new DbContextOptionsBuilder() })
-    {
-    }*/
-
     public DbSet<ProcessedMessageInfo> ProcessedMessages { get; set; }
+
+    public DbSet<LatencyTestMessageInfo> LatencyTestMessages { get; set; }
 }

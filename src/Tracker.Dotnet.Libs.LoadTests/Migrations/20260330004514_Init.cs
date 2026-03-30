@@ -34,6 +34,21 @@ namespace Tracker.Dotnet.Libs.LoadTests.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "LatencyTestMessages",
+                columns: table => new
+                {
+                    MessageId = table.Column<string>(type: "text", nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: false),
+                    DateSent = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateReceived = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Duration = table.Column<TimeSpan>(type: "interval", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LatencyTestMessages", x => x.MessageId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProcessedMessages",
                 columns: table => new
                 {
@@ -56,6 +71,9 @@ namespace Tracker.Dotnet.Libs.LoadTests.Migrations
             migrationBuilder.DropTable(
                 name: "Inbox",
                 schema: "public");
+
+            migrationBuilder.DropTable(
+                name: "LatencyTestMessages");
 
             migrationBuilder.DropTable(
                 name: "ProcessedMessages");
