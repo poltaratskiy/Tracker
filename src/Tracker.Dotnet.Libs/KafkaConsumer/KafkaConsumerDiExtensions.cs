@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Tracker.Dotnet.Libs.KafkaAbstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Configuration;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Internal;
 using Tracker.Dotnet.Libs.KafkaProducer;
+using Tracker.Dotnet.Libs.RequestContextAccessor.Abstractions;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
@@ -59,7 +59,7 @@ public static class KafkaConsumerDiExtensions
         services.AddSingleton<IConsumerWrapper, ConsumerWrapper>();
         services.AddSingleton<IProducerWrapper, ProducerWrapper>();
         services.AddSingleton<IKafkaGeneralConsumer, KafkaGeneralConsumer>();
-        services.AddScoped<IContextAccessor, ContextAccessor>();
+        services.TryAddSingleton<IRequestContextAccessor, RequestContextAccessor.RequestContextAccessor>();
         services.AddHostedService<KafkaConsumerBackgroundService>();
         services.TryAddSingleton<IInbox, NoOpInbox>();
         services.TryAddSingleton<TransactionalInboxOptions>();

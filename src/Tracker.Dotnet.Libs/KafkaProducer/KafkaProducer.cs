@@ -1,7 +1,9 @@
 ﻿using Confluent.Kafka;
-using Microsoft.AspNetCore.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Unicode;
+using Tracker.Dotnet.Libs.RequestContextAccessor.Abstractions;
 
 namespace Tracker.Dotnet.Libs.KafkaProducer;
 
@@ -9,12 +11,12 @@ public class KafkaProducer : IKafkaProducer
 {
     private readonly IProducerWrapper _producer;
     private readonly KafkaProducerOptions _options;
-    //private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IRequestContextAccessor _requestContextAccessor;
 
-    public KafkaProducer(KafkaProducerOptions options, IProducerWrapper producer/*, IHttpContextAccessor httpContextAccessor*/)
+    public KafkaProducer(KafkaProducerOptions options, IProducerWrapper producer, IRequestContextAccessor requestContextAccessor)
     {
         _options = options;
-        //_httpContextAccessor = httpContextAccessor;
+        _requestContextAccessor = requestContextAccessor;
 
         var config = new ProducerConfig
         {
@@ -35,17 +37,14 @@ public class KafkaProducer : IKafkaProducer
 
         var payload = JsonSerializer.Serialize(message, new JsonSerializerOptions
         {
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // for serializing Cyrillic symbols
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) // for serializing Cyrillic symbols
         });
 
         var key = Guid.NewGuid().ToString();
 
-        string? refId = null;
-        /*var context = _httpContextAccessor.HttpContext;
-        if (context?.Items != null && context.Items.TryGetValue("RefId", out var val))
-        {
-            refId = val as string;
-        }*/
+        var context = _requestContextAccessor.Current;
+        var refId = context?.RefId ?? Guid.NewGuid().ToString("N")[^6..];
+        var token = context?.JwtToken;
 
         var msg = new Message<string, string> 
         { 
@@ -56,8 +55,13 @@ public class KafkaProducer : IKafkaProducer
         msg.Headers = new Headers
         {
             { "MessageId", Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()) },
-            { "RefId", Encoding.UTF8.GetBytes(refId ?? string.Empty) },
+            { "RefId", Encoding.UTF8.GetBytes(refId) },
         };
+
+        if (token != null)
+        {
+            msg.Headers.Add("Authorization", Encoding.UTF8.GetBytes(token));
+        }
 
         await _producer.ProduceAsync(topic, msg, cancellationToken);
     }
