@@ -2,6 +2,7 @@
 using Moq;
 using Shouldly;
 using Tracker.Dotnet.Libs.KafkaProducer;
+using Tracker.Dotnet.Libs.RequestContextAccessor;
 
 namespace Tracker.Dotnet.Libs.Tests.KafkaProducer;
 
@@ -27,7 +28,7 @@ public class DiExtensionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton(Mock.Of<IProducerWrapper>());
-        services.AddHttpContextAccessor();
+        services.AddRequestContextAccessor();
 
         services.AddKafkaProducer(cfg =>
         {

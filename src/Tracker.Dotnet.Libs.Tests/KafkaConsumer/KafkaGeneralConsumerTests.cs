@@ -11,6 +11,7 @@ using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Configuration;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Internal;
 using Tracker.Dotnet.Libs.KafkaProducer;
+using Tracker.Dotnet.Libs.RequestContextAccessor.Abstractions;
 
 namespace Tracker.Dotnet.Libs.Tests.KafkaConsumer;
 
@@ -85,6 +86,7 @@ public class KafkaGeneralConsumerTests
             provider.GetRequiredService<ILogger<KafkaGeneralConsumer>>(),
             provider.GetRequiredService<IConsumerWrapper>(),
             provider.GetRequiredService<IProducerWrapper>(),
+            provider.GetRequiredService<IRequestContextAccessor>(),
             provider,
             provider.GetRequiredService<IInbox>(),
             provider.GetRequiredService<TransactionalInboxOptions>(),

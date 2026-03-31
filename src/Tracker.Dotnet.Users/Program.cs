@@ -3,7 +3,7 @@ using System.Reflection;
 using Tracker.Dotnet.Libs.Authorization;
 using Tracker.Dotnet.Libs.Exceptions;
 using Tracker.Dotnet.Libs.Logging;
-using Tracker.Dotnet.Libs.RefId;
+using Tracker.Dotnet.Libs.RequestContextAccessor;
 using Tracker.Dotnet.Libs.Swagger;
 using Tracker.Dotnet.Users.External;
 
@@ -27,6 +27,8 @@ try
     services.AddTrackerSwagger();
     services.AddJwtTrackerAuthentication(configuration);
 
+    services.AddRequestContextAccessor();
+
     // Add authorization
     builder.Services.AddAuthorization();
 
@@ -35,8 +37,8 @@ try
     var app = builder.Build();
     Log.Information($"Configuring services at {appName} has been finished");
 
-    app.UseRefId();
     app.UseMyExceptionHandler();
+    app.UseRequestContext();
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsProduction())

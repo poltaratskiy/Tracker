@@ -9,6 +9,7 @@ using System.Text.Json;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Abstractions;
 using Tracker.Dotnet.Libs.KafkaConsumer.Inbox.Configuration;
 using Tracker.Dotnet.Libs.KafkaProducer;
+using Tracker.Dotnet.Libs.RequestContextAccessor.Abstractions;
 
 namespace Tracker.Dotnet.Libs.KafkaConsumer;
 
@@ -21,6 +22,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
     private readonly ILogger<KafkaGeneralConsumer> _logger;
     private readonly IConsumerWrapper _consumerWrapper;
     private readonly IProducerWrapper _producerWrapper;
+    private readonly IRequestContextAccessor _requestContextAccessor;
     private readonly IServiceProvider _serviceProvider;
     private readonly IInbox _inbox;
     private readonly KafkaConsumerOptions _consumerOptions;
@@ -31,6 +33,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
         ILogger<KafkaGeneralConsumer> logger,
         IConsumerWrapper consumerWrapper,
         IProducerWrapper producerWrapper,
+        IRequestContextAccessor requestContextAccessor,
         IServiceProvider serviceProvider,
         IInbox inbox,
         TransactionalInboxOptions transactionalInboxOptions,
@@ -39,6 +42,7 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
         _logger = logger;
         _consumerWrapper = consumerWrapper;
         _producerWrapper = producerWrapper;
+        _requestContextAccessor = requestContextAccessor;
         _serviceProvider = serviceProvider;
         _consumerOptions = consumerOptions;
         _inbox = inbox;
@@ -113,9 +117,6 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
 
                     using var scope = _serviceProvider.CreateScope();
                     var handler = scope.ServiceProvider.GetRequiredService(handlerType);
-                    var contextAccessor = scope.ServiceProvider.GetRequiredService<IContextAccessor>();
-                    contextAccessor.InstanceId = InstanceId;
-                    contextAccessor.MessageId = messageIdStr;
 
                     var refId = result.Message.Headers
                         .FirstOrDefault(h => h.Key == "RefId")?
@@ -123,7 +124,23 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
 
                     var refIdStr = refId != null
                         ? Encoding.UTF8.GetString(refId)
-                        : string.Empty;
+                        : Guid.NewGuid().ToString("N")[^6..];
+
+                    var token = result.Message.Headers
+                        .FirstOrDefault(h => h.Key == "Authorization")?
+                        .GetValueBytes();
+
+                    var tokenStr = token != null
+                        ? Encoding.UTF8.GetString(token)
+                        : null;
+
+                    var requestContext = new RequestContext
+                    {
+                        JwtToken = tokenStr,
+                        ConsumerInstanceId = InstanceId,
+                        MessageId = messageIdStr,
+                        RefId = refIdStr
+                    };
 
 
                     using (LogContext.PushProperty("refid", refIdStr))
@@ -131,6 +148,8 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                         try
                         {
                             var message = JsonSerializer.Deserialize(messageJson, messageType);
+
+                            _requestContextAccessor.Current = requestContext;
 
                             await combinedPolicy.ExecuteAsync(async ct =>
                             {
@@ -158,6 +177,10 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                             await MoveToDeadLetterTopic(messageJson, refIdStr, messageIdStr, ex.Message, cancellationToken);
                             await _inbox.MarkFailedAsync(messageIdStr, ex, cancellationToken);
                             _consumerWrapper.Commit(result);
+                        }
+                        finally
+                        {
+                            _requestContextAccessor.Current = null;
                         }
                     }
                 }

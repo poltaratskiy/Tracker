@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Serilog.Core;
 using Serilog.Events;
+using Tracker.Dotnet.Libs.RequestContextAccessor.Abstractions;
 
 namespace Tracker.Dotnet.Libs.RefId
 {
@@ -9,22 +10,22 @@ namespace Tracker.Dotnet.Libs.RefId
     /// </summary>
     public class RefIdEnricher : ILogEventEnricher
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRequestContextAccessor _contextAccessor;
         private const string PropertyName = "RefId";
 
-        public RefIdEnricher(IHttpContextAccessor httpContextAccessor)
+        public RefIdEnricher(IRequestContextAccessor contextAccessor)
         {
-            _httpContextAccessor = httpContextAccessor;
+            _contextAccessor = contextAccessor;
         }
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            var context = _httpContextAccessor.HttpContext;
+            var context = _contextAccessor.Current;
             var refId = string.Empty;
 
-            if (context?.Items != null && context.Items.TryGetValue("RefId", out var val))
+            if (context?.RefId != null)
             {
-                refId = val as string;
+                refId = context.RefId;
             }
 
             var property = propertyFactory.CreateProperty(PropertyName, refId);
