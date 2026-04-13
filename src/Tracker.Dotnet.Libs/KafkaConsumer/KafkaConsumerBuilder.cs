@@ -39,4 +39,10 @@ public class KafkaConsumerBuilder
         _options.DeadLettersTopic = topic;
         return this;
     }
+
+    public KafkaConsumerBuilder AllowAutoCreateTopics(bool allowAutoCreateTopics)
+    {
+        _options.AllowAutoCreateTopics = allowAutoCreateTopics;
+        return this;
+    }
 }

@@ -27,9 +27,10 @@ public class GenericServiceProvider
             var inboxDbConfig = new Action<IServiceProvider, DbContextOptionsBuilder>((sp, db) => 
                 db.UseNpgsql(ConfigConstants.GetConnectionString()));
 
-            services.AddKafkaConsumer(c => 
+            services.AddKafkaConsumer(c =>
                 c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
                 .ConsumerGroup(ConfigConstants.KafkaConsumerGroup)
+                .AllowAutoCreateTopics(false)
                 .ForMessage<ThroughputTestMessage>().Handler<ThroughputTestHandler>().Topic(ConfigConstants.KafkaTopic)
                 .ForMessage<LatencyTestMessage>().Handler<LatencyTestHandler>().Topic(ConfigConstants.KafkaLatencyTestTopic)
                 )
@@ -45,6 +46,7 @@ public class GenericServiceProvider
             services.AddKafkaConsumer(c => 
                 c.BootstrapServers(ConfigConstants.KafkaBootstrapServer)
                 .ConsumerGroup(ConfigConstants.KafkaConsumerGroup)
+                .AllowAutoCreateTopics(false)
                 .ForMessage<ThroughputTestMessage>().Handler<ThroughputTestHandler>().Topic(ConfigConstants.KafkaTopic)
                 .ForMessage<LatencyTestMessage>().Handler<LatencyTestHandler>().Topic(ConfigConstants.KafkaLatencyTestTopic));
         }

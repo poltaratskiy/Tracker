@@ -20,7 +20,7 @@ public class ConsumerWrapper : IConsumerWrapper
             GroupId = _consumerOptions.ConsumerGroup,     // consumer group name (important for balancing)
             AutoOffsetReset = AutoOffsetReset.Earliest, // read from the beginning if offset not found
             EnableAutoCommit = false,                 // control offset manually
-            AllowAutoCreateTopics = false,            // specify topics
+            AllowAutoCreateTopics = _consumerOptions.AllowAutoCreateTopics,
             MaxPollIntervalMs = 900000
         };
 
