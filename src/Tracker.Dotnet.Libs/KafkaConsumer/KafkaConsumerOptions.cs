@@ -10,6 +10,8 @@ public class KafkaConsumerOptions
 
     public int InstantRetries { get; set; }
 
+    public bool AllowAutoCreateTopics { get; set; }
+
     /// <summary>
     /// Dictionary that contains Message type and Handler type by typic name.
     /// </summary>
