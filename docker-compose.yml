@@ -14,7 +14,7 @@
       - ./logging:/var/log/myservices
 
   tracker.dotnet.tasks:
-    image: tracker-dotnet-users:local
+    image: tracker-dotnet-tasks:local
     ports:
       - "6011:80"
     build:
