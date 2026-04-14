@@ -33,6 +33,7 @@ docker compose up
 ## Access
 - tracker.react.users: http://localhost:5000/
 - tracker.dotnet.users: http://localhost:5011/swagger/
+- tracker.dotnet.tasks: http://localhost:6011/swagger/
 - Grafana: http://localhost:3000/
 - Kafka console (Redpanda): http://localhost:9090/
 - SSO: http://localhost:9011/
@@ -68,6 +69,8 @@ The project follows an **event-driven architecture**, where services communicate
 This pet project makes certain assumptions and simplifications to keep the setup lightweight and runnable via Docker Compose. Some of them like storing secrets in docker-compose.yml was intentionally done to be possible to run on a local machine without complex set up, using http instead of https is also intentionally done not to have any issues with certificates on a local machine. It is required to store secrets in a special storage and they must not be in a code, and it is nessesary to use https for external connections.
 
 This project may have some overhead so I left comments across the code to explain some assumptions and decisions.
+
+At this step there is no users synchronization, instead of that realised seeding, so users will be added to a database when service started at the first time. Assuming that users won't be changed with SSO at this step.
 
 ## Messaging
 

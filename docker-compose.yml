@@ -13,6 +13,20 @@
     volumes:
       - ./logging:/var/log/myservices
 
+  tracker.dotnet.tasks:
+    image: tracker-dotnet-users:local
+    ports:
+      - "6011:80"
+    build:
+      context: .
+      dockerfile: src/Tracker.Dotnet.Tasks/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__ApplicationDbContext=Host=database;Port=5432;Database=tasks;Username=postgres;Password=postgres
+    volumes:
+      - ./logging:/var/log/myservices
+
   tracker.react.users:
     build:
       context: ./src/Tracker.React.Users
@@ -92,10 +106,12 @@
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       FUSIONAUTH_APP_KICKSTART_FILE: /usr/local/fusionauth/kickstart/kickstart.json
-      FUSIONAUTH_APP_MEMORY: 512M
+      FUSIONAUTH_APP_MEMORY: 384M
       FUSIONAUTH_APP_RUNTIME_MODE: development
       FUSIONAUTH_APP_URL: http://fusionauth:9011
       SEARCH_TYPE: database
+    mem_limit: 600m
+    cpus: 1.0
     healthcheck:
       test: curl --silent --fail http://localhost:9011/api/status -o /dev/null -w "%{http_code}"
       interval: 5s

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11520.95 d18.3
+VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
 EndProject
@@ -23,6 +23,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Users.Tests", "src\Tracker.Dotnet.Users.Tests\Tracker.Dotnet.Users.Tests.csproj", "{6B01D01A-5030-4332-8266-F90A0880D208}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Libs.LoadTests", "src\Tracker.Dotnet.Libs.LoadTests\Tracker.Dotnet.Libs.LoadTests.csproj", "{DAAA2EEB-6C86-464C-9DE4-C409D117F526}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracker.Dotnet.Tasks", "src\Tracker.Dotnet.Tasks\Tracker.Dotnet.Tasks.csproj", "{E073EA1D-0AD7-479C-9C22-B2A22003D72F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,6 +56,10 @@ Global
 		{DAAA2EEB-6C86-464C-9DE4-C409D117F526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAAA2EEB-6C86-464C-9DE4-C409D117F526}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAAA2EEB-6C86-464C-9DE4-C409D117F526}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E073EA1D-0AD7-479C-9C22-B2A22003D72F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E073EA1D-0AD7-479C-9C22-B2A22003D72F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E073EA1D-0AD7-479C-9C22-B2A22003D72F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E073EA1D-0AD7-479C-9C22-B2A22003D72F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
