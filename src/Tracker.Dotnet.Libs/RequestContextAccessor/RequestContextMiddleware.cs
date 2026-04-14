@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using Tracker.Dotnet.Libs.RequestContextAccessor.Abstractions;
 
@@ -16,7 +15,7 @@ public class RequestContextMiddleware
 
     public async Task Invoke(
         HttpContext httpContext,
-        IRequestContextAccessor accessor, ILogger<RequestContextMiddleware> logger)
+        IRequestContextAccessor accessor)
     {
         var refId = httpContext.Request.Headers["RefId"].FirstOrDefault() ?? Guid.NewGuid().ToString("N")[^6..];
         var claims = string.Join(", ", httpContext.User.Claims.Select(x => x.Type));
