@@ -12,6 +12,43 @@ Pet project to demonstrate programming and architecture skills.
 ## Goals
 The goals were to create microservice-like environment deployed in Docker compose.
 
+## Get started
+
+### Prerequisites
+Make sure you have the following installed:
+- Docker
+- Docker Compose
+
+### Setup
+
+1. Clone the repository:
+```bash
+git clone
+```
+2. Start the application:
+```bash
+docker compose up
+```
+
+## Access
+- tracker.react.users: http://localhost:5000/
+- tracker.dotnet.users: http://localhost:5011/swagger/
+- grafana: http://localhost:3000/
+- SSO: http://localhost:9011/
+
+## Users
+| Login         | Role        | Password   | Notes                  |
+|---------------|-------------|------------|------------------------|
+| admin         | Admin       | 12345678   | Only SSO Access        |
+| admin1        | Admin       | 123        |                        |
+| admin2        | Admin       | 123        |                        |
+| manager1      | Manager     | 123        |                        |
+| manager2      | Manager     | 123        |                        |
+| user1         | User        | 123        |                        |
+| user2         | User        | 123        |                        |
+| user3         | User        | 123        |                        |
+| accountant1   | Accountant  | 123        |                        |
+
 ## Developed
 - Logging, using Promtail, Loki, Grafana instead of ELK
 - Tracing request Id
@@ -24,10 +61,23 @@ The goals were to create microservice-like environment deployed in Docker compos
 ## Approaches
 I used the Clean Architecture + CQRS approach and layered architecture because it allows to add features without strong modification of existing code and it increases readability and maintainability.
 
+The project follows an **event-driven architecture**, where services communicate via events published to a message broker, reducing coupling and improving scalability.
+
 ## Assumptions
 This pet project makes certain assumptions and simplifications to keep the setup lightweight and runnable via Docker Compose. Some of them like storing secrets in docker-compose.yml was intentionally done to be possible to run on a local machine without complex set up, using http instead of https is also intentionally done not to have any issues with certificates on a local machine. It is required to store secrets in a special storage and they must not be in a code, and it is nessesary to use https for external connections.
 
 This project may have some overhead so I left comments across the code to explain some assumptions and decisions.
+
+## Messaging
+
+The project uses **Redpanda** (Kafka-compatible streaming platform) for event-driven communication.
+
+Why Redpanda:
+- fully Kafka API compatible
+- simpler local setup (no Zookeeper)
+- production-grade
+
+All messaging is implemented using Confluent.Kafka client.
 
 # Kafka stress tests
 It was interesting for me to make stress test of Kafka and understand in practice how each combination of parameters affect on latency and reliablity.
