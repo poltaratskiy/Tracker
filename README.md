@@ -33,7 +33,8 @@ docker compose up
 ## Access
 - tracker.react.users: http://localhost:5000/
 - tracker.dotnet.users: http://localhost:5011/swagger/
-- grafana: http://localhost:3000/
+- Grafana: http://localhost:3000/
+- Kafka console (Redpanda): http://localhost:9090/
 - SSO: http://localhost:9011/
 
 ## Users
