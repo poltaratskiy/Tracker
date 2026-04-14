@@ -17,11 +17,19 @@ public class RequestContextMiddleware
         IRequestContextAccessor accessor)
     {
         var refId = httpContext.Request.Headers["RefId"].FirstOrDefault() ?? Guid.NewGuid().ToString("N")[^6..];
+        var userId = httpContext.User.FindFirst("sub")?.Value;
+        var fullName = httpContext.User.FindFirst("fullName")?.Value;
+        var login = httpContext.User.FindFirst("username")?.Value;
+        var role = httpContext.User.FindFirst("roles")?.Value;
 
         accessor.Current = new RequestContext
         {
             RefId = refId,
-            JwtToken = GetBearerToken(httpContext)
+            JwtToken = GetBearerToken(httpContext),
+            UserId = userId != null ? Guid.Parse(userId) : null,
+            FullName = fullName,
+            Login = login,
+            Role = role,
         };
 
         try
