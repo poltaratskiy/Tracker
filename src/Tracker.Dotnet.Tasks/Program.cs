@@ -5,6 +5,7 @@ using Tracker.Dotnet.Libs.Exceptions;
 using Tracker.Dotnet.Libs.Logging;
 using Tracker.Dotnet.Libs.RequestContextAccessor;
 using Tracker.Dotnet.Libs.Swagger;
+using Tracker.Dotnet.Tasks.Application.Pagination;
 using Tracker.Dotnet.Tasks.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,8 @@ try
     // Order is important, first authentication, then authorization
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UseRequestContext();
 
     app.MapControllers();
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Tracker.Dotnet.Libs.RequestContextAccessor.Abstractions;
 
 namespace Tracker.Dotnet.Libs.RequestContextAccessor;
@@ -17,7 +18,8 @@ public class RequestContextMiddleware
         IRequestContextAccessor accessor)
     {
         var refId = httpContext.Request.Headers["RefId"].FirstOrDefault() ?? Guid.NewGuid().ToString("N")[^6..];
-        var userId = httpContext.User.FindFirst("sub")?.Value;
+        var claims = string.Join(", ", httpContext.User.Claims.Select(x => x.Type));
+        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var fullName = httpContext.User.FindFirst("fullName")?.Value;
         var login = httpContext.User.FindFirst("username")?.Value;
         var role = httpContext.User.FindFirst("roles")?.Value;
