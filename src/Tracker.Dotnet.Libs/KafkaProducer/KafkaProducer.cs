@@ -63,7 +63,7 @@ public class KafkaProducer : IKafkaProducer
 
         if (userId != null)
         {
-            msg.Headers.Add("UserId", Encoding.UTF8.GetBytes(userId.ToString()))
+            msg.Headers.Add("UserId", Encoding.UTF8.GetBytes(userId.ToString()!));
         }
 
         if (login != null)
