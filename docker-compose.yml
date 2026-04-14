@@ -44,6 +44,40 @@
       timeout: 5s
       retries: 5
 
+  redpanda:
+    image: redpandadata/redpanda:v26.1.4
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --memory
+      - "1G"
+      - --reserve-memory
+      - "0M"
+      - --kafka-addr
+      - internal://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - internal://redpanda:9092
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster info --brokers localhost:9092"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redpanda-console:
+    image: redpandadata/console:v3.7.1
+    depends_on:
+      - redpanda
+    ports:
+      - "9090:8080"
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+
   fusionauth:
     image: fusionauth/fusionauth-app:latest
     depends_on:
@@ -114,4 +148,5 @@
 volumes:
   database: {}
   users_node_modules: {}
+  redpanda_data: {}
 
