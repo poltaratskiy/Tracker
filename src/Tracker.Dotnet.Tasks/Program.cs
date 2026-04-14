@@ -1,11 +1,11 @@
-﻿using Serilog;
+using Serilog;
 using System.Reflection;
 using Tracker.Dotnet.Libs.Authorization;
 using Tracker.Dotnet.Libs.Exceptions;
 using Tracker.Dotnet.Libs.Logging;
 using Tracker.Dotnet.Libs.RequestContextAccessor;
 using Tracker.Dotnet.Libs.Swagger;
-using Tracker.Dotnet.Users.External;
+using Tracker.Dotnet.Tasks.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,9 +21,10 @@ try
 
     services.AddControllers();
 
+    services.AddDatabase(configuration);
+
     builder.Host.AddSerilog(configuration);
 
-    services.AddExternalServices(configuration);
     services.AddTrackerSwagger();
     services.AddJwtTrackerAuthentication(configuration);
 
@@ -36,6 +37,9 @@ try
 
     var app = builder.Build();
     Log.Information($"Configuring services at {appName} has been finished");
+
+    await app.MigrateDbAsync();
+    Log.Information($"Db migrations at {appName} has been finished");
 
     app.UseMyExceptionHandler();
     app.UseRequestContext();
@@ -62,4 +66,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
