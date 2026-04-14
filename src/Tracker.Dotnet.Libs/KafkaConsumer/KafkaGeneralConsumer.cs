@@ -126,17 +126,44 @@ public class KafkaGeneralConsumer : IKafkaGeneralConsumer
                         ? Encoding.UTF8.GetString(refId)
                         : Guid.NewGuid().ToString("N")[^6..];
 
-                    var token = result.Message.Headers
-                        .FirstOrDefault(h => h.Key == "Authorization")?
+                    var userId = result.Message.Headers
+                        .FirstOrDefault(h => h.Key == "UserId")?
                         .GetValueBytes();
 
-                    var tokenStr = token != null
-                        ? Encoding.UTF8.GetString(token)
+                    var userIdStr = userId != null
+                        ? Encoding.UTF8.GetString(userId)
+                        : null;
+
+                    var login = result.Message.Headers
+                        .FirstOrDefault(h => h.Key == "Login")?
+                        .GetValueBytes();
+
+                    var loginStr = login != null
+                        ? Encoding.UTF8.GetString(login)
+                        : null;
+
+                    var fullName = result.Message.Headers
+                        .FirstOrDefault(h => h.Key == "FullName")?
+                        .GetValueBytes();
+
+                    var fullNameStr = fullName != null
+                        ? Encoding.UTF8.GetString(fullName)
+                        : null;
+
+                    var role = result.Message.Headers
+                        .FirstOrDefault(h => h.Key == "Role")?
+                        .GetValueBytes();
+
+                    var roleStr = role != null
+                        ? Encoding.UTF8.GetString(role)
                         : null;
 
                     var requestContext = new RequestContext
                     {
-                        JwtToken = tokenStr,
+                        UserId = userIdStr != null ? Guid.Parse(userIdStr) : null,
+                        Login = loginStr,
+                        FullName = fullNameStr,
+                        Role = roleStr,
                         ConsumerInstanceId = InstanceId,
                         MessageId = messageIdStr,
                         RefId = refIdStr

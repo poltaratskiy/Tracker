@@ -44,7 +44,10 @@ public class KafkaProducer : IKafkaProducer
 
         var context = _requestContextAccessor.Current;
         var refId = context?.RefId ?? Guid.NewGuid().ToString("N")[^6..];
-        var token = context?.JwtToken;
+        var userId = context?.UserId;
+        var login = context?.Login;
+        var fullName = context?.FullName;
+        var role = context?.Role;
 
         var msg = new Message<string, string> 
         { 
@@ -58,9 +61,24 @@ public class KafkaProducer : IKafkaProducer
             { "RefId", Encoding.UTF8.GetBytes(refId) },
         };
 
-        if (token != null)
+        if (userId != null)
         {
-            msg.Headers.Add("Authorization", Encoding.UTF8.GetBytes(token));
+            msg.Headers.Add("UserId", Encoding.UTF8.GetBytes(userId.ToString()))
+        }
+
+        if (login != null)
+        {
+            msg.Headers.Add("Login", Encoding.UTF8.GetBytes(login));
+        }
+
+        if (fullName != null)
+        {
+            msg.Headers.Add("FullName", Encoding.UTF8.GetBytes(fullName));
+        }
+
+        if (role != null)
+        {
+            msg.Headers.Add("Role", Encoding.UTF8.GetBytes(role));
         }
 
         await _producer.ProduceAsync(topic, msg, cancellationToken);
