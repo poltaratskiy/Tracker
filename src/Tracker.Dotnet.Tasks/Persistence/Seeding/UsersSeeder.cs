@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tracker.Dotnet.Tasks.Persistence.Entities;
+using Tracker.Dotnet.Tasks.Domain.Entities;
 
 namespace Tracker.Dotnet.Tasks.Persistence.Seeding;
 
@@ -16,6 +16,7 @@ internal class UsersSeeder
     {
         await SeedRolesAsync(cancellationToken);
         await SeedUsersAsync(cancellationToken);
+        await SeedTasksAsync(cancellationToken);
     }
 
     private async Task SeedRolesAsync(CancellationToken cancellationToken)
@@ -96,6 +97,63 @@ internal class UsersSeeder
         if (!await _db.Users.AnyAsync(x => x.Id == Guid.Parse("3580abf2-c0da-408d-9bb6-f1482703d3fb") && x.Login == "accountant1", cancellationToken))
         {
             _db.Users.Add(new User { Id = Guid.Parse("3580abf2-c0da-408d-9bb6-f1482703d3fb"), Login = "accountant1", FullName = "Accountant 1", RoleId = 4 });
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task SeedTasksAsync(CancellationToken cancellationToken)
+    {
+        if (!await _db.Tasks.AnyAsync(cancellationToken))
+        {
+            _db.Tasks.Add(new TaskEntity
+            {
+                Title = "Create login page",
+                Description = "Implement a login page with email and password authentication, validation, and error handling.",
+                Price = 50m
+            });
+
+            _db.Tasks.Add(new TaskEntity
+            {
+                Title = "Add user registration",
+                Description = "Implement a registration form with email confirmation and basic field validation.",
+                Price = 70m
+            });
+
+            _db.Tasks.Add(new TaskEntity
+            {
+                Title = "Implement JWT authentication",
+                Description = "Configure access and refresh tokens along with middleware for JWT validation.",
+                Price = 120m
+            });
+
+            _db.Tasks.Add(new TaskEntity
+            {
+                Title = "Add task list pagination",
+                Description = "Implement paginated task retrieval with page and pageSize parameters and total count.",
+                Price = 80m
+            });
+
+            _db.Tasks.Add(new TaskEntity
+            {
+                Title = "Implement task filtering",
+                Description = "Add filtering by status, date, and text search.",
+                Price = 90m
+            });
+
+            _db.Tasks.Add(new TaskEntity
+            {
+                Title = "Configure logging with Serilog",
+                Description = "Set up structured logging with output to console and file.",
+                Price = 60m
+            });
+
+            _db.Tasks.Add(new TaskEntity
+            {
+                Title = "Integrate Swagger with authentication",
+                Description = "Add Bearer token support in Swagger UI for testing secured endpoints.",
+                Price = 50m
+            });
+
             await _db.SaveChangesAsync(cancellationToken);
         }
     }

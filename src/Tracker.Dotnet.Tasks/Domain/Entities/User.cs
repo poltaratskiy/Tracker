@@ -1,4 +1,4 @@
-﻿namespace Tracker.Dotnet.Tasks.Persistence.Entities;
+﻿namespace Tracker.Dotnet.Tasks.Domain.Entities;
 
 public class User
 {

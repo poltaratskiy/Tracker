@@ -10,4 +10,6 @@ public interface IRequestContext
     public string? FullName { get; }
     public string? Role { get; }
     public string? JwtToken { get; }
+
+    public bool IsInRole(string role);
 }

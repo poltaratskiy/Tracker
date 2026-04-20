@@ -20,7 +20,12 @@ try
 {
     Log.Information($"Starting {appName} application...");
 
-    services.AddControllers();
+    services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(
+                new System.Text.Json.Serialization.JsonStringEnumConverter());
+        });
 
     services.AddDatabase(configuration);
 

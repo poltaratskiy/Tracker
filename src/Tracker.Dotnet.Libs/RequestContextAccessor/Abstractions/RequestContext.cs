@@ -17,4 +17,12 @@ internal class RequestContext : IRequestContext
     public string? Role { get; set; }
 
     public string? JwtToken { get; set; }
+
+    public bool IsInRole(string role)
+    {
+        if (Role == null || Role.Length == 0) 
+            return false;
+
+        return Role.Equals(role, StringComparison.InvariantCultureIgnoreCase);
+    }
 }
