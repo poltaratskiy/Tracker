@@ -38,8 +38,7 @@ try
     Log.Information($"Configuring services at {appName} has been finished");
 
     app.UseMyExceptionHandler();
-    app.UseRequestContext();
-
+    
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsProduction())
     {
@@ -49,6 +48,8 @@ try
     // Order is important, first authentication, then authorization
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UseRequestContext();
 
     app.MapControllers();
 

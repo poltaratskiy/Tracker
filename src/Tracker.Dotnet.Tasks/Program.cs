@@ -43,7 +43,6 @@ try
     Log.Information($"Db migrations at {appName} has been finished");
 
     app.UseMyExceptionHandler();
-    app.UseRequestContext();
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsProduction())
