@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Tracker.Dotnet.Tasks.Persistence.Entities;
+using Tracker.Dotnet.Tasks.Domain.Entities;
 
 namespace Tracker.Dotnet.Tasks.Persistence.Configurations;
 
