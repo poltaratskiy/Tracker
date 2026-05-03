@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Tracker.Dotnet.Tasks.Application.Pagination;
 using Tracker.Dotnet.Tasks.Application.Tasks.Commands;
 using Tracker.Dotnet.Tasks.Application.Tasks.Queries;
-using static Tracker.Dotnet.Tasks.Application.Tasks.Commands.CreateTaskHandler;
 
 namespace Tracker.Dotnet.Tasks.Controllers;
 

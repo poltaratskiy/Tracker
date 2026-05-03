@@ -1,8 +1,6 @@
 ﻿using MediatR;
-using Tracker.Dotnet.Tasks.Application.Users.Queries;
 using Tracker.Dotnet.Tasks.Domain.Entities;
 using Tracker.Dotnet.Tasks.Persistence;
-using static Tracker.Dotnet.Tasks.Application.Tasks.Commands.CreateTaskHandler;
 
 namespace Tracker.Dotnet.Tasks.Application.Tasks.Commands;
 
@@ -12,6 +10,9 @@ public class CreateTaskCommand : IRequest<CreatedTaskModel>
     public required string Description { get; init; }
     public decimal Price { get; set; }
 }
+
+public record CreatedTaskModel(int Id);
+
 
 public class CreateTaskHandler : IRequestHandler<CreateTaskCommand, CreatedTaskModel>
 {
@@ -23,8 +24,6 @@ public class CreateTaskHandler : IRequestHandler<CreateTaskCommand, CreatedTaskM
         _logger = logger;
         _dbContext = dbContext;
     }
-
-    public record CreatedTaskModel(int Id);
 
     public async Task<CreatedTaskModel> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
     {
