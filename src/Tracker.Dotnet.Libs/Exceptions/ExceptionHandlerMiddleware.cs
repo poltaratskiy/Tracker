@@ -37,6 +37,22 @@ internal class ExceptionHandlerMiddleware
 
             await context.Response.WriteAsJsonAsync(response);
         }
+        catch (NotFoundException ex)
+        {
+            _logger.LogInformation(ex, "Not found exception occured");
+
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+
+            var response = new ValidationProblemDetails
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                Detail = "Resource not found",
+                Status = StatusCodes.Status404NotFound,
+            };
+
+            await context.Response.WriteAsJsonAsync(response);
+        }
         catch (WrongCredentialsException)
         {
             _logger.LogWarning("Wrong credentials were used");
